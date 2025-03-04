@@ -1,4 +1,53 @@
-# Chirpy Starter
+# Sejam todos bem vindos ao repositório referente ao 'Static Site Generator' fornecido por Chirpy!
+
+Quero agradecer ao Luiz Henrique Arantes que me incentivou e me ajudou a dar início a esse projeto!
+---
+# Chirpy Starter (PT-BR)
+[![Versão do Gem](https://img.shields.io/gem/v/jekyll-theme-chirpy)][gem]&nbsp;
+[![Licença do GitHub](https://img.shields.io/github/license/cotes2020/chirpy-starter.svg?color=blue)][mit]
+
+Ao instalar o tema [**Chirpy**][chirpy] por meio do [RubyGems.org][gem], o Jekyll só consegue ler arquivos nas pastas
+`_data`, `_layouts`, `_includes`, `_sass` e `assets`, bem como uma pequena parte das opções do arquivo `_config.yml`
+do gem do tema. Se você já instalou este gem do tema, pode usar o comando
+`bundle info --path jekyll-theme-chirpy` para localizar esses arquivos.
+
+A equipe do Jekyll alega que isso é para deixar a bola na quadra do usuário, mas isso também faz com que os usuários não consigam
+aproveitar a experiência pronta para uso ao usar temas ricos em recursos.
+
+Para usar totalmente todos os recursos do **Chirpy**, você precisa copiar os outros arquivos críticos da gema do tema para o seu
+site Jekyll. A seguir está uma lista de alvos:
+
+```shell
+.
+├── _config.yml
+├── _plugins
+├── _tabs
+└── index.html
+```
+
+Para economizar seu tempo, e também caso você perca alguns arquivos durante a cópia, extraímos esses arquivos/configurações da
+última versão do tema **Chirpy** e o fluxo de trabalho [CD][CD] para aqui, para que você possa começar a escrever em minutos.
+
+## Uso
+
+Confira a [documentação do tema](https://github.com/cotes2020/jekyll-theme-chirpy/wiki).
+
+## Contribuindo
+
+Este repositório é atualizado automaticamente com novos lançamentos do repositório do tema. Se você encontrar algum problema ou quiser contribuir para sua melhoria, visite o [repositório do tema][chirpy] para fornecer feedback.
+
+## Licença
+
+Este trabalho é publicado sob a licença [MIT][mit].
+
+[gem]: https://rubygems.org/gems/jekyll-theme-chirpy
+[chirpy]: https://github.com/cotes2020/jekyll-theme-chirpy/
+[CD]: https://en.wikipedia.org/wiki/Continuous_deployment
+[mit]: https://github.com/cotes2020/chirpy-starter/blob/master/LICENSE
+
+---
+
+# Chirpy Starter (EN-US)
 
 [![Gem Version](https://img.shields.io/gem/v/jekyll-theme-chirpy)][gem]&nbsp;
 [![GitHub license](https://img.shields.io/github/license/cotes2020/chirpy-starter.svg?color=blue)][mit]
