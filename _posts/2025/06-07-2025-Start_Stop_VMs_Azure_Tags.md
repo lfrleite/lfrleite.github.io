@@ -187,4 +187,14 @@ E finalmente temos um Automation Account devidamente configurado, com os agendam
 
 Este é o fim deste nosso primeiro artigo do nosso blog! Espero que tenham gostado e possam aplicar em seus clientes! Até a próxima!
 
+## Artigos
+
+| Nome                                                        | Link                                                                                            |
+| :-----------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| Tipos de runbook da Automação do Azure                      | <https://learn.microsoft.com/pt-br/azure/automation/automation-runbook-types?tabs=lps72%2Cpy10> |
+| Habilitar uma Identidade Gerenciada em um Automation Account| <https://learn.microsoft.com/pt-br/azure/automation/enable-managed-identity-for-automation>     |
+| Script PowerShell                                           | <https://github.com/lfrleite/Ruiz-Online/blob/main/Start%20Stop%20VMs%20-%20Azure.md>           |
+
+---
+
 > "Confie no Senhor de todo o coração, não dependa do seu próprio entendimento. Busque a vontade dEle em **TUDO** que fizer, e Ele lhe mostrará o caminho que deve seguir" - PV 3:5-6
