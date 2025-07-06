@@ -52,7 +52,7 @@ Primeiramente vamos criar um Automation Account na assinatura de forma bem simpl
 ![runbook-create](/assets/img/001/005-start-stop.png){: .shadow .rounded-10} 
 <br>
 
-### **Passo 2**
+### Passo 2
 
 Dentro de Runbooks podemos verificar que já existem 2 modelos oferecidos pelo Azure para criar a partir deles, mas já iremos disponibilizar um devidamente configurado com as informações completas pra uso.
 
@@ -90,7 +90,7 @@ Selecione ‘**PowerShell-7.2**‘:
 
 5. Em seguida vamos clicar em ‘**Save**‘ em ‘**Publish**‘ para publicar o Runbook customizado que acabamos de criar.
 
-**Passo 3**
+### Passo 3
 
 Nesse momento temos 50% do processo pronto! Agora vamos precisar ajustar a permissão do Automation Account para realizar as devidas ações nas VMs.
 
@@ -111,7 +111,7 @@ Nesse momento temos 50% do processo pronto! Agora vamos precisar ajustar a permi
 ![runbook-create](/assets/img/001/014-start-stop.png){: .shadow .rounded-10} 
 <br>
 
-**Passo 4**
+### Passo 4
 
 Antes de aplicarmos em produção, seguindo as boas práticas, devemos sempre fazer testes antes. E por isso o Runbook possui uma função incrível onde pode ser feito o teste diretamente na ferramenta antes de agendarmos em produção!
 
@@ -172,7 +172,7 @@ Antes de aplicarmos em produção, seguindo as boas práticas, devemos sempre fa
 {: .prompt-info } 
 <br>
 
-**Passo 5**
+### Passo 5
 
 Por último, mas não menos importante, iremos realizar o agendamento (_***Schedule***_) para que a função de Start/Stop funcione de forma automatizada.
 
@@ -246,9 +246,23 @@ E finalmente temos um Automation Account devidamente configurado, com os agendam
 - Dependendo do quantitativo de máquinas virtuais existentes em uma assinatura, o ideal é ir quebrando as execuções por Automation Accounts;
 - A Microsoft recomenda o uso de Logic App para estas funções, contudo dependendo do consumo pode chegar a um valor considerável, por isso é importante validar o quantitativo no ambiente e segmentar.
 
+### Checklist
+- [x] Passo 1 - Criando um Automation Account
+- [x] Passo 2 - Criando um Runbook
+- [x] Passo 3 - Habilitando uma identidade gerenciada e fornecendo os privilégios necessários
+- [x] Passo 4 - Testando o agendamento
+- [x] Passo 5 - Aplicando em Produção
+
+
 ## The End!
 
 Este é o fim deste nosso primeiro artigo do nosso blog! Espero que tenham gostado e possam aplicar em seus clientes! Até a próxima!
+
+## Inspiração
+
+**Esse artigo foi inspirado no vídeo do Raphael Andrade**:
+
+<iframe width="1218" height="685" src="https://www.youtube.com/embed/hYANqXSxVMU" title="Como economizar até 50% no custo de VMs com Start-Stop automático" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ## Artigos
 
