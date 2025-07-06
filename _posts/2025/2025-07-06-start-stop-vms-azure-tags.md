@@ -279,7 +279,7 @@ E finalmente temos um Automation Account devidamente configurado, com os agendam
 
 **Esse artigo foi inspirado no vídeo do Raphael Andrade**:
 
-<iframe width="900" height="512" src="https://www.youtube.com/embed/hYANqXSxVMU" title="Como economizar até 50% no custo de VMs com Start-Stop automático" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="800" height="512" src="https://www.youtube.com/embed/hYANqXSxVMU" title="Como economizar até 50% no custo de VMs com Start-Stop automático" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ---
 
