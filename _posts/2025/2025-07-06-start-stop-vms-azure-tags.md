@@ -199,11 +199,12 @@ Por último, mas não menos importante, iremos realizar o agendamento (_***Sched
 <br>
 
 2 - Clicamos em ‘**Add a schedule**‘ novamente para configurarmos o primeiro agendamento de START das VMs:
-    1. Campo **Name**: Inclua um nome para o agendamento. Ex.: Start-VMs-08-00
-    2. **Descrição**: Como mencionado anteriormente, este é um campo importante e livre para a descrição do motivo deste agendamento.
-    3. Campo ‘**Starts**‘: Você pode determinar quando este agendamento começará a valer de verdade! O horário precisa refletir EXATAMENTE o horário de inicio do START. Por melhores práticas o ideal é deixar o agendamento para a data que foi acordado com o cliente mediante uma GMUD.
-    4. **Time Zone**: Aqui você determina em qual GMT ou UTC o agendamento ocorrerá. É um dos campos mais importantes do agendamento, portanto precisa ser o mais assertivo possível na escolha.
-    5. 6 e 7 – **Recorrência**: Outro fator importante: “Qual será a recorrência que este agendamento ocorrerá? Por hora? Por dia? Por semana? Por mês?“. Este é o ponto chave onde podemos dizer em quais dias da semana irá acontecer este agendamento. No nosso caso, selecionamos a recorrência de forma SEMANAL durante o dia útil (Segunda à Sexta).
+
+1. Campo **Name**: Inclua um nome para o agendamento. Ex.: Start-VMs-08-00
+2. **Descrição**: Como mencionado anteriormente, este é um campo importante e livre para a descrição do motivo deste agendamento.
+3. Campo ‘**Starts**‘: Você pode determinar quando este agendamento começará a valer de verdade! O horário precisa refletir EXATAMENTE o horário de inicio do START. Por melhores práticas o ideal é deixar o agendamento para a data que foi acordado com o cliente mediante uma GMUD.
+4. **Time Zone**: Aqui você determina em qual GMT ou UTC o agendamento ocorrerá. É um dos campos mais importantes do agendamento, portanto precisa ser o mais assertivo possível na escolha.
+5. 6 e 7 – **Recorrência**: Outro fator importante: “Qual será a recorrência que este agendamento ocorrerá? Por hora? Por dia? Por semana? Por mês?“. Este é o ponto chave onde podemos dizer em quais dias da semana irá acontecer este agendamento. No nosso caso, selecionamos a recorrência de forma SEMANAL durante o dia útil (Segunda à Sexta).
 
 ![runbook-schedule](/assets/img/001/026-start-stop.png){: .shadow .rounded-10} 
 <br>
