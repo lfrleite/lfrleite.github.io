@@ -1,7 +1,7 @@
 ---
 #layout: post
 title: "Inventariando qualquer ambiente do Azure com o Azure Resource Inventory (ARI)"
-date: 2025-07-21 12:00:00
+date: 2025-07-20 12:00:00
 categories: [Azure]
 tags: [azure, tag, environment, inventory, resources]
 slug: 'inventariando-qualquer-ambiente-do-azure-com-ari'
