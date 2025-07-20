@@ -186,6 +186,14 @@ E pronto! Nesse momento você pode retornar a janela do PowerShell e acompanhar 
 
 ---
 
+## Inspiração
+
+**Esse artigo foi inspirado no vídeo do Raphael Andrade**:
+
+<iframe width="800" height="512" src="https://www.youtube.com/embed/vKk7E26b1e8" title="Como inventariar seu ambiente Azure" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+---
+
 ## Artigos
 
 | Nome                                                        | Link                                                                                                     |
@@ -196,11 +204,8 @@ E pronto! Nesse momento você pode retornar a janela do PowerShell e acompanhar 
 | Módulo de PowerShell ImportExcel                            | <https://github.com/dfinke/ImportExcel>                                                                  |
 | Download do Draw.io                                         | <https://apps.microsoft.com/detail/9mvvszk43qqw?hl=pt-br&gl=br>                                          |
 
-
 ---
 
 ## The End!
 
 Este é o fim de mais um artigo em nosso blog! Espero que vocês possam usufruir dessa potente ferramenta e que esse artigo tenha facilitado de alguma forma o seu uso. Até a próxima!
-
----
