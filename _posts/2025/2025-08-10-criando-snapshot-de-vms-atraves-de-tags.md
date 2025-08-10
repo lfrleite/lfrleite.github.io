@@ -47,11 +47,9 @@ Agora pense em um ambiente com 50+ VMs, cada uma com pelo menos dois discos anex
 - Chamado = “Ticket”
 - Solicitante = “Solicitante”
 - “Excluir em” = “xx-xx-xxxx”
-<br>
 
 > **Obs 01** - Os nomes foram sugeridos mediante as experiencias anteriores que necessitavam destas informações, mas que podem ser facilmente alterados por um de sua preferencia.
 {: .prompt-info } 
-<br>
 
 > **Obs 02** - O campo VALOR (Exemplo: “Ticket”) precisam conter OBRIGATÓRIAMENTE aspas duplas.
 {: .prompt-warning } 
@@ -95,7 +93,6 @@ Nesse momento todos os recursos foram devidamente coletados e estão pronto para
 
 > No exemplo abaixo salvaremos os snapshots no Resource Group chamado ‘**snapshotstemporarios**‘:
 {: .prompt-info } 
-<br>
 
 ![snapshot-exec](/assets/img/003/006-snapshot-vms.png){: .shadow .rounded-10} 
 <br>
@@ -146,6 +143,7 @@ Adicionalmente foi criado um arquivo de **LOG** contendo as informações dos di
 - [x] Passo 1 - Fazer o download dos arquivos necessários e inserir as informações para o snapshot.ps1
 - [x] Passo 2 - Inserir as informações das VMs e a Subscription que elas pertencem ao arquivo snapshot.csv
 - [x] Passo 3 - Executar o arquivo snapshot.ps1 com os parâmetros TenantId e o ResourceGroupName
+
 ---
 
 ## Artigos
