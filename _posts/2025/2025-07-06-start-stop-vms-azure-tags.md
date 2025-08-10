@@ -91,7 +91,7 @@ Selecione ‘**PowerShell-7.2**‘:
 
 4 - Agora com nosso Runbook criado seremos direcionados para editarmos o nosso Runbook PowerShell totalmente zerado. Logo abaixo deixarei o script para que possam copiar e colar diretamente no portal:
 
-[Script Start/Stop VMs](https://github.com/lfrleite/Ruiz-Online/blob/main/Start%20Stop%20VMs%20-%20Azure.md)
+[Script Start/Stop VMs](https://github.com/lfrleite/Ruiz-Online/blob/main/Start-Stop-VMs/Start%20Stop%20VMs%20-%20Azure.md)
 <br>
 
 ![runbook-create](/assets/img/001/010-start-stop.png){: .shadow .rounded-10} 
