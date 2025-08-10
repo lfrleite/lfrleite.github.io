@@ -33,7 +33,7 @@ Agora pense em um ambiente com 50+ VMs, cada uma com pelo menos dois discos anex
 ## Mão na massa!
 
 #### Passo 1
-<br>
+
 **Acesse o meu repositório e baixe o arquivo [snapshot.zip](https://github.com/lfrleite/Ruiz-Online/tree/main/Criando%20Snapshots)**
 <br>
 
@@ -44,6 +44,7 @@ Agora pense em um ambiente com 50+ VMs, cada uma com pelo menos dois discos anex
 
 2 - O arquivo ‘**snapshot.ps1**‘ encontra-se devidamente preenchido contendo as informações necessárias para a criação das TAGs como:
 <br>
+
 - Chamado = “Ticket”
 - Solicitante = “Solicitante”
 - “Excluir em” = “xx-xx-xxxx”
@@ -62,6 +63,7 @@ Agora pense em um ambiente com 50+ VMs, cada uma com pelo menos dois discos anex
 
 ![snapshot-config](/assets/img/003/004-snapshot-vms.png){: .shadow .rounded-10} 
 <br>
+
 ---
 
 #### Passo 2
@@ -70,7 +72,7 @@ Agora pense em um ambiente com 50+ VMs, cada uma com pelo menos dois discos anex
 {: .prompt-info } 
 <br>
 
-1 - Abra o arquivo ‘**snapshot.csv**‘ e substitua as colunas ‘*A*’ e ‘*B*’ a partir da linha 2. Onde na **coluna ‘A’** representam as VMs que serão realizadas os snapshots e na **coluna ‘B’** ficará o ID da Subscription (assinatura) onde estão alocadas as VMs:
+1 - Abra o arquivo ‘**snapshot.csv**‘ e substitua as colunas **A** e **B** a partir da linha 2. Onde na **coluna A** representam as VMs que serão realizadas os snapshots e na **coluna B** ficará o ID da Subscription (assinatura) onde estão alocadas as VMs:
 
 ![snapshot-config](/assets/img/003/005-snapshot-vms.png){: .shadow .rounded-10} 
 <br>
@@ -85,13 +87,13 @@ Agora pense em um ambiente com 50+ VMs, cada uma com pelo menos dois discos anex
 
 Nesse momento todos os recursos foram devidamente coletados e estão pronto para uso. Execute o PowerShell com privilégios de **Administrador**.
 
-1 - Navegue até a pasta ‘C:\Temp\’ e execute o snapshot.ps1 incluindo os parâmetros **-TenantId “xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx” -ResourceGroupName “nomedoRG“**.
+1 - Navegue até a pasta **'C:\Temp\'** e execute o snapshot.ps1 incluindo os parâmetros **-TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -ResourceGroupName "nomedoRG"**.
 
 ```powershell
-.\snapshot.ps1 -TenantId “xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx” -ResourceGroupName “nomedoRG“
+.\snapshot.ps1 -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -ResourceGroupName "nomedoRG"
 ```
 
-> No exemplo abaixo salvaremos os snapshots no Resource Group chamado ‘**snapshotstemporarios**‘:
+> No exemplo abaixo salvaremos os snapshots no Resource Group chamado '**snapshotstemporarios**':
 {: .prompt-info } 
 
 ![snapshot-exec](/assets/img/003/006-snapshot-vms.png){: .shadow .rounded-10} 
@@ -111,7 +113,7 @@ Nesse momento todos os recursos foram devidamente coletados e estão pronto para
 ![snapshot-exec](/assets/img/003/008-snapshot-vms.png){: .shadow .rounded-10} 
 <br>
 
-> Caso ainda não tenha uma conta previamente conectada, selecione a opção “*Work or School Account*” ou “*Conta de Trabalho ou Escola*“, como a imagem acima, e em seguida inclua seu login e senha para acesso ao tenant.
+> Caso ainda não tenha uma conta previamente conectada, selecione a opção "*Work or School Account*" ou "*Conta de Trabalho ou Escola*", como a imagem acima, e em seguida inclua seu login e senha para acesso ao tenant.
 {: .prompt-info } 
 <br>
 
@@ -120,7 +122,7 @@ Nesse momento todos os recursos foram devidamente coletados e estão pronto para
 ![snapshot-exec](/assets/img/003/009-snapshot-vms.png){: .shadow .rounded-10} 
 <br>
 
-Basta incluir um ‘**S**‘ para continuar e aguardar a execução do script completo e aparecerão as informações relevantes sobre cada snapshot realizado automaticamente:
+Basta incluir um **S** para continuar e aguardar a execução do script completo e aparecerão as informações relevantes sobre cada snapshot realizado automaticamente:
 
 ![snapshot-exec](/assets/img/003/010-snapshot-vms.png){: .shadow .rounded-10} 
 <br>
