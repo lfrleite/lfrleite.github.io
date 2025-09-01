@@ -62,7 +62,7 @@ Porém, fazer na mão 5 ou 10 é até aceitável… Agora fazer 50, 100 ou 200 n
 <br>
 
 ```powershell
-.\removesnapshot.ps1 -TenantId “xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx” -Chamado “NumDoChamado” -Excluir “DataParaExclusão” -Solicitante “NomeDoSolicitante”
+.\removesnapshot.ps1 -TenantId "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" -Chamado "NumDoChamado" -Excluir "DataParaExclusão" -Solicitante "NomeDoSolicitante"
 ```
 
 ![remove-snap-config](/assets/img/004/006-removendo-snapshot-vms.png){: .shadow .rounded-10} 
