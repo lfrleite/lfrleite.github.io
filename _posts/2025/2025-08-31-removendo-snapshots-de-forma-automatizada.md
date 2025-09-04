@@ -1,6 +1,6 @@
 ---
 #layout: post
-title: "Removendo Snapshots de forma automiazada"
+title: "Removendo Snapshots de forma automatizada"
 date: 2025-08-31 12:00:00
 categories: [Azure]
 tags: [azure, tag, environment, snapshot, resources]
