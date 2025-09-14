@@ -4,7 +4,7 @@ title: "Removendo Snapshots de forma automatizada"
 date: 2025-08-31 12:00:00
 categories: [Azure]
 tags: [azure, tag, environment, snapshot, resources]
-slug: 'criando-snapshot-de-vms-atraves-de-tags'
+slug: 'removendo-snapshots-de-forma-automatizada'
 image:
   path: assets/img/004/001-removendo-snapshot-vms.png
 ---
