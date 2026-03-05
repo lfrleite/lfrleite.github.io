@@ -6,7 +6,7 @@ order: 4
 
 Meu nome é Luiz Felipe Ruiz Leite, atuo como Azure Cloud Engineer promovendo soluções e melhorias em ambientes Microsoft Azure e Microsoft 365. Sou Microsoft Certified Trainer (MCT) e adoro compartilhar conhecimentos e experiências adquiridas nos meus 18 anos atuando com Tecnologia da Informação.
 
-Atualmente sou supervisor de suporte técnico na TFTEC Cloud e Analista Cloud na TFTEC Services.
+Atualmente atuo como Technical Account Manager na empresa Solo Network.
 
 Sou Cristão, carioca, vascaíno e casado com a mulher mais incrível do mundo!
 
