@@ -14,16 +14,16 @@ timezone: America/Sao_Paulo
 # jekyll-seo-tag settings › https://github.com/jekyll/jekyll-seo-tag/blob/master/docs/usage.md
 # ↓ --------------------------
 
-title: Luiz Felipe # the main title
+title: Luiz Felipe Ruiz # the main title
 
-tagline: Azure Cloud Engineer | MCT  # it will display as the subtitle
+tagline: Azure Cloud Engineer | Technical Account Manager | MCT  # it will display as the subtitle
 
 description: >- # used by seo meta and the atom feed
   Blog pessoal técnico sobre soluções de Cloud Providers focada em Microsoft Azure e Microsoft 365.
 
 # Fill in the protocol & hostname for your site.
 # E.g. 'https://username.github.io', note that it does not end with a '/'.
-url: "https://blog.ruizonlinesolutions.com"
+url: "https://blog.ruizsolutions.online/"
 
 github:
   username: lfrleite # change to your GitHub username
@@ -34,8 +34,8 @@ twitter:
 social:
   # Change to your full name.
   # It will be displayed as the default author of the posts and the copyright owner in the Footer
-  name: Ruiz Online Solutions
-  email: contato@ruizonlineprime.com.br # change to your email address
+  name: Ruiz Solutions Online
+  email:  # change to your email address
   links:
     # The first element serves as the copyright owner's link
     # - # change to your Twitter homepage
