@@ -1,6 +1,6 @@
 ---
 #layout: post
-title: "Atualizando o Windows Server em uma VM no Azureo sem surpresas"
+title: "Atualizando o Windows Server em uma VM do Azure sem surpresas"
 date: 2026-03-09 08:00:00 -03:00
 categories: [Azure]
 tags: [azure, windows-server, upgrade, in-place-upgrade, virtual-machine]
@@ -9,7 +9,7 @@ image:
   path: assets/img/005/001-windows-server-upgrade-azure.png
 ---
 
-Fala PessoALL! Estava um pouco sumido né? Mas vamos seguir nossa jornada!
+Fala PessoALL! Estava um pouco sumido né? Mas agora estamos com a nossa programação normal de volta!
 
 Quando falamos de **atualização** de um Windows Server dentro do Azure, muita gente ainda pensa que o único caminho é criar uma nova máquina, migrar tudo manualmente e depois descomissionar a antiga. *(até pouco tempo sim rsrs)*
 
@@ -58,9 +58,11 @@ Na prática, não é porque a VM está no Azure que qualquer salto de versão se
 Além disso, vale um ponto importante: para Windows Server 2025, a Microsoft ampliou os caminhos suportados e permite upgrades mais longos em sistemas não clusterizados.
 
 ![winserver-upgrade](assets/img/005/002-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
 > Antes de qualquer clique, valide a matriz oficial de upgrade. Começar um projeto sem essa checagem é pedir retrabalho. 
 {: .prompt-warning }
+<br>
 
 ---
 
@@ -101,7 +103,9 @@ Essa etapa é o que vai te salvar caso o upgrade falhe no meio do processo ou o 
 
 Imagem
 
-> Upgrade in-place sem snapshot é aposta. E ambiente corporativo não combina com aposta. {: .prompt-danger }
+> Upgrade in-place sem snapshot é aposta. E ambiente corporativo não combina com aposta. 
+{: .prompt-danger }
+<br>
 
 ---
 
@@ -182,6 +186,7 @@ Com o disco criado, anexe essa mídia de upgrade na VM.
 
 > Esse disco precisa estar na mesma região da VM e, se a VM estiver em zona, na mesma zona também.
 {: .prompt-warning }
+<br>
 
 ---
 
@@ -282,10 +287,21 @@ O upgrade in-place resolve muito bem o sistema operacional, mas não “transfor
 
 ---
 
+## Inspiração
+
+**Esse artigo foi inspirado no vídeo do Raphael Andrade**:
+
+<iframe width="800" height="512" src="https://www.youtube.com/embed/-T7AAPQ9Sos" title="Como Atualizar o Windows Server no Azure | Upgrade In-Place" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+---
+
 ## Artigos
 
-[In-place upgrade for VMs running Windows Server in Azure](https://learn.microsoft.com/en-us/azure/virtual-machines/windows-in-place-upgrade)
-[Overview of Windows Server upgrades](https://learn.microsoft.com/en-us/windows-server/get-started/upgrade-overview)
+| Nome | Link |
+| :---:|:---:|
+| In-place upgrade for VMs running Windows Server in Azure | (https://learn.microsoft.com/en-us/azure/virtual-machines/windows-in-place-upgrade) |
+| Overview of Windows Server upgrades | (https://learn.microsoft.com/en-us/windows-server/get-started/upgrade-overview) |
+
 
 ---
 
