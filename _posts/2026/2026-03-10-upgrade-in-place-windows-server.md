@@ -1,7 +1,7 @@
 ---
 #layout: post
 title: "Atualizando o Windows Server em uma VM no Azureo sem surpresas"
-date: 2026-03-09 08:00:00
+date: 2026-03-09 08:00:00 -03:00
 categories: [Azure]
 tags: [azure, windows-server, upgrade, in-place-upgrade, virtual-machine]
 slug: 'upgrade-in-place-windows-server-azure-vm'
