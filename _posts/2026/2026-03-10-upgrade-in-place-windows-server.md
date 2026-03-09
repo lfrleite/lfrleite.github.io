@@ -47,6 +47,8 @@ Imagine um cenário onde você já possui diversas VMs de produção, com aplica
 
 **Se essas respostas estiverem claras, aí sim seguimos.**
 
+---
+
 #### Passo 1
 
 A primeira tarefa é validar se a sua origem e o seu destino fazem parte de um **caminho de upgrade suportado**.
@@ -60,6 +62,8 @@ Além disso, vale um ponto importante: para Windows Server 2025, a Microsoft amp
 > Antes de qualquer clique, valide a matriz oficial de upgrade. Começar um projeto sem essa checagem é pedir retrabalho. 
 {: .prompt-warning }
 
+---
+
 #### Passo 2
 
 Agora execute a ferramenta **Azure VM Windows OS Upgrade Assessment Tool**.
@@ -67,6 +71,8 @@ Agora execute a ferramenta **Azure VM Windows OS Upgrade Assessment Tool**.
 Essa ferramenta ajuda a validar o caminho de upgrade e possíveis problemas conhecidos antes de você iniciar a mudança de verdade.
 
 Esse é o tipo de etapa que muita gente ignora, mas que faz total diferença quando o objetivo é evitar surpresa no meio da janela de manutenção.
+
+---
 
 #### Passo 3
 
@@ -80,6 +86,8 @@ Com o caminho validado, verifique o básico da VM:
 
 Se a VM ainda não estiver usando **Managed Disks**, esse é um requisito para seguir com o processo no Azure.
 
+---
+
 #### Passo 4
 
 Agora vem uma das etapas mais importantes: **proteger o rollback**.
@@ -91,16 +99,20 @@ Crie snapshot do:
 
 Essa etapa é o que vai te salvar caso o upgrade falhe no meio do processo ou o sistema não volte de forma saudável.
 
-![ws-upgrade-002](assets/img/004/102-windows-server-upgrade-snapshot.png){: .shadow .rounded-10}
+Imagem
 
 > Upgrade in-place sem snapshot é aposta. E ambiente corporativo não combina com aposta. {: .prompt-danger }
+
+---
 
 #### Passo 5
 
 No Azure, o processo oficial para Windows Server utiliza uma **mídia de upgrade em formato de Managed Disk**, criada a partir de uma imagem especial do Marketplace.
 
 Abaixo está um exemplo de script para criar o disco de mídia de upgrade.  
-Adapte os parâmetros de acordo com o seu ambiente:
+Adapte os parâmetros de acordo com o seu ambiente. Sugerimos que copie e cole em um bloco de notas ou outro editor como VSCode pra melhorar a visualização e edição.
+
+1 - Abra o Cloud Shell, copie e cole o código abaixo (após ter ajustado conforme a sua necessidade), e basta clicar em enter e aguardar o fim da configuração.
 
 ```powershell
 # Resource group onde o disco de upgrade será criado
@@ -158,51 +170,54 @@ Set-AzDiskImageReference -Disk $diskConfig -Id $image.Id -Lun 0
 New-AzDisk -ResourceGroupName $resourceGroup `
            -DiskName $diskName `
            -Disk $diskConfig
+```
 
+---
 
-Passo 6
+#### Passo 6
 
 Com o disco criado, anexe essa mídia de upgrade na VM.
 
-No portal do Azure:
+1 - No portal do Azure abra a VM, vá em Disks e clique em Attach existing disks. Selecione o disco de upgrade criado anteriormente e salve a configuração
 
-abra a VM
+> Esse disco precisa estar na mesma região da VM e, se a VM estiver em zona, na mesma zona também.
+{: .prompt-warning }
 
-vá em Disks
+---
 
-clique em Attach existing disks
-
-selecione o disco de upgrade criado anteriormente
-
-salve a configuração
-
-Esse disco precisa estar na mesma região da VM e, se a VM estiver em zona, na mesma zona também.
-
-Passo 7
+#### Passo 7
 
 Agora sim, com a VM em execução, conecte-se via RDP ou Azure Bastion, descubra a letra da unidade onde a mídia foi anexada e inicie o setup.
 
-Para Windows Server 2016, 2019, 2022 ou 2025, você pode utilizar o seguinte comando:
+1 - Abra o PowerShell como Administrador e em seguida navegue até 
 
+Para Windows Server **2016, 2019, 2022 ou 2025**, você pode utilizar o seguinte comando:
+
+```powershell
 .\setup.exe /auto upgrade /dynamicupdate disable /eula accept
+```
 
 Esse comando ajuda a automatizar o processo e evita travas por aceite manual do contrato de licença.
 
-Se você estiver lidando especificamente com um alvo Windows Server 2012, o fluxo é mais manual e o setup é iniciado apenas com:
+Ou se você estiver lidando especificamente com um alvo Windows Server 2012, o fluxo é mais manual e o setup é iniciado apenas com:
 
+```powershell
 .\setup.exe
+```
 
 Depois, basta seguir o assistente de instalação e escolher a opção de manter arquivos, configurações e aplicações.
 
-{: .shadow .rounded-10}
+---
 
-Passo 8
+#### Passo 8
 
 Durante o processo, a VM vai reiniciar e sua sessão RDP será desconectada automaticamente.
 
 Nesse momento, você pode acompanhar o progresso por meio da funcionalidade de screenshot no portal do Azure, o que é muito útil quando a VM está em uma etapa em que o acesso remoto ainda não voltou.
 
-Passo 9
+---
+
+#### Passo 9
 
 Concluído o upgrade, valide:
 
@@ -226,7 +241,9 @@ remova o disco de mídia de upgrade
 
 reabilite antivírus, antispyware e firewall, se eles tiverem sido desabilitados
 
-Passo 10
+---
+
+#### Passo 10
 
 Agora vem um alerta importantíssimo: mesmo com o upgrade concluído, a VM continua mantendo as informações da imagem original no Azure.
 
@@ -250,34 +267,29 @@ O upgrade in-place resolve muito bem o sistema operacional, mas não “transfor
 
 
 
-Checklist
+### Checklist
 
-Passo 1 - Validar o caminho de upgrade suportado
+- [x] Passo 1 - Validar o caminho de upgrade suportado
+- [x] Passo 2 - Executar o OS Upgrade Assessment Tool
+- [x] Passo 3 - Verificar espaço livre, saúde da VM e uso de Managed Disks
+- [x] Passo 4 - Criar snapshot do disco do sistema e dos discos de dados
+- [x] Passo 5 - Criar a mídia de upgrade em formato de Managed Disk
+- [x] Passo 6 - Anexar o disco de upgrade na VM
+- [x] Passo 7 - Executar o setup do Windows Server
+- [x] Passo 8 - Acompanhar o progresso e aguardar reinicializações
+- [x] Passo 9 - Validar o sistema após a atualização
+- [x] Passo 10 - Remover artefatos temporários e revisar impactos no Azure
 
-Passo 2 - Executar o OS Upgrade Assessment Tool
+---
 
-Passo 3 - Verificar espaço livre, saúde da VM e uso de Managed Disks
-
-Passo 4 - Criar snapshot do disco do sistema e dos discos de dados
-
-Passo 5 - Criar a mídia de upgrade em formato de Managed Disk
-
-Passo 6 - Anexar o disco de upgrade na VM
-
-Passo 7 - Executar o setup do Windows Server
-
-Passo 8 - Acompanhar o progresso e aguardar reinicializações
-
-Passo 9 - Validar o sistema após a atualização
-
-Passo 10 - Remover artefatos temporários e revisar impactos no Azure
-
-Artigos
+## Artigos
 
 [In-place upgrade for VMs running Windows Server in Azure](https://learn.microsoft.com/en-us/azure/virtual-machines/windows-in-place-upgrade)
 [Overview of Windows Server upgrades](https://learn.microsoft.com/en-us/windows-server/get-started/upgrade-overview)
 
-The End!
+---
+
+## The End!
 
 Este é o fim de mais um artigo em nosso blog!
 
