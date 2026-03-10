@@ -26,78 +26,50 @@ Imagine um cenário onde você já possui diversas VMs de produção, com aplica
 
 ### Pre-requisitos:
 
-- Possuir uma VM do Azure executando Windows Server em um caminho de upgrade suportado
-- Validar previamente a matriz de upgrade da versão atual para a versão de destino
-- Garantir espaço livre suficiente no disco do sistema operacional
-- Utilizar **Managed Disks**
-- Criar snapshot do disco do sistema operacional e, se necessário, dos discos de dados
-- *(opcional)* Desabilitar temporariamente antivírus e firewall dentro do sistema operacional
+- Possuir permissão de no mínimo Contributor da Subscription;
+- Validar previamente a matriz de upgrade da versão atual para a versão de destino - [Versões](https://learn.microsoft.com/pt-br/azure/virtual-machines/windows-in-place-upgrade#prerequisites);
+- Garantir mínimo 32GB de espaço livre suficiente no disco do sistema operacional;
+- Utilizar **Managed Disks** é obrigatório;
+- Criar snapshot do disco do sistema operacional e, se houver disco de dados também;
+- *(opcional)* Desabilitar temporariamente antivírus e firewall dentro do S.O.
 
 ---
 
 ## Mão na massa!
 
-> Antes de iniciar qualquer alteração, eu recomendo responder 4 perguntas:
-{: .prompt-info }
-
-1 - O caminho de upgrade da sua versão atual para a versão desejada é suportado?  
-2 - Essa VM realmente precisa ser mantida, ou faz mais sentido criar uma nova?  
-3 - Você possui rollback rápido via snapshot e/ou backup?  
-4 - Você está ciente de que, após o upgrade in-place, a VM deixa de aproveitar algumas capacidades ligadas ao modelo original da imagem no Azure?
-
-**Se essas respostas estiverem claras, aí sim seguimos.**
-
 ---
 
 #### Passo 1
+
+> Antes de qualquer clique, valide a matriz oficial de upgrade. 
+{: .prompt-warning }
+<br>
 
 A primeira tarefa é validar se a sua origem e o seu destino fazem parte de um **caminho de upgrade suportado**.
 
 Na prática, não é porque a VM está no Azure que qualquer salto de versão será permitido. O ideal é sempre consultar a matriz oficial antes de começar.
 
-Além disso, vale um ponto importante: para Windows Server 2025, a Microsoft ampliou os caminhos suportados e permite upgrades mais longos em sistemas não clusterizados.
+A própria documentação da Microsoft orienta
 
 ![winserver-upgrade](assets/img/005/002-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
-> Antes de qualquer clique, valide a matriz oficial de upgrade. Começar um projeto sem essa checagem é pedir retrabalho. 
-{: .prompt-warning }
+***Opcional***
+A Microsoft sugere que executemos **[Ferramenta de avaliação de atualização do sistema operacional Windows da VM do Azure](https://learn.microsoft.com/pt-br/troubleshoot/azure/virtual-machines/windows/windows-vm-osupgradeassessment-tool)** onde valida se o Sistema Operacional possui compatibilidade com o modelo de upgrade in-place. É uma ferramenta bem simples e de fácil utilização, onde você irá realizar o download da ferramenta diretamente do [repositório oficial no Github](https://github.com/Azure/azure-support-scripts/blob/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) para a VM que será realizada essa atualização e executá-lo.
+
+Caso ocorra alguma falha, ele retornará uma imagem parecida com essa:
+![winserver-upgrade](assets/img/005/003-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
 ---
 
-#### Passo 2
+#### Passo 2 
 
-Agora execute a ferramenta **Azure VM Windows OS Upgrade Assessment Tool**.
+Como todo administrador, você precisa pensar sempre na proteção e restauração em caso de algum problema durente o processo. Nessa etapa iremos realizar um snapshot do disco para (caso seja necessário) restaurá-lo em seguida.
 
-Essa ferramenta ajuda a validar o caminho de upgrade e possíveis problemas conhecidos antes de você iniciar a mudança de verdade.
-
-Esse é o tipo de etapa que muita gente ignora, mas que faz total diferença quando o objetivo é evitar surpresa no meio da janela de manutenção.
-
----
-
-#### Passo 3
-
-Com o caminho validado, verifique o básico da VM:
-
-* disco do sistema com espaço livre suficiente
-* uso de **Managed Disks**
-* sistema operacional saudável
-* conectividade administrativa funcionando
-* ausência de bloqueios por antivírus, antispyware ou firewall local
-
-Se a VM ainda não estiver usando **Managed Disks**, esse é um requisito para seguir com o processo no Azure.
-
----
-
-#### Passo 4
-
-Agora vem uma das etapas mais importantes: **proteger o rollback**.
-
-Crie snapshot do:
-
-* disco do sistema operacional
-* discos de dados, se houver
+> Caso você tenha sido designado para realizar um upgrade de mais de 5 / 10 / 50 VMs, nós temos um artigo que lhe auxiliará a realizar esses snapshots de forma automatizada! [Criando Snapshots de VMs no Azure com TAGs](https://blog.ruizsolutions.online/posts/criando-snapshot-de-vms-atraves-de-tags/). 
+{: .prompt-info }
+<br>
 
 Essa etapa é o que vai te salvar caso o upgrade falhe no meio do processo ou o sistema não volte de forma saudável.
 
@@ -291,17 +263,19 @@ O upgrade in-place resolve muito bem o sistema operacional, mas não “transfor
 
 **Esse artigo foi inspirado no vídeo do Raphael Andrade**:
 
-<iframe width="800" height="512" src="https://www.youtube.com/embed/-T7AAPQ9Sos" title="Como Atualizar o Windows Server no Azure | Upgrade In-Place" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+<iframe width="700" height="512" src="https://www.youtube.com/embed/-T7AAPQ9Sos" title="Como Atualizar o Windows Server no Azure | Upgrade In-Place" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
 
 ---
 
 ## Artigos
 
+| :---:|:---:|
 | Nome | Link |
 | :---:|:---:|
-| In-place upgrade for VMs running Windows Server in Azure | (https://learn.microsoft.com/en-us/azure/virtual-machines/windows-in-place-upgrade) |
-| Overview of Windows Server upgrades | (https://learn.microsoft.com/en-us/windows-server/get-started/upgrade-overview) |
-
+| In-place upgrade for VMs running Windows Server in Azure | <https://learn.microsoft.com/pt-br/azure/virtual-machines/windows-in-place-upgrade> |
+| Overview of Windows Server upgrades | <https://learn.microsoft.com/pt-br/windows-server/get-started/upgrade-overview> |
+| Requisitos de hardware do Windows Server | <https://learn.microsoft.com/pt-br/windows-server/get-started/hardware-requirements?tabs=storage&pivots=windows-server-2025>
+| :---:|:---:|
 
 ---
 
