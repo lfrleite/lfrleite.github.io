@@ -17,9 +17,6 @@ Mas a Microsoft melhorou (e muito) esse processo de atualização, inclusive é 
 
 Imagine um cenário onde você já possui diversas VMs de produção, com aplicações instaladas, integrações funcionando e precisa manter a integridade de segurança e melhorar a compatibilidade com as novas aplicações onde se faz necessário elevar a versão do sistema operacional mantendo o máximo possível da estrutura existente, o **upgrade in-place** será um caminho bem interessante.
 
-> Mas aqui tem um detalhe MUITO importante: no Azure, esse processo precisa ser feito do jeito certo. Não é só montar uma ISO e sair clicando em **Next**.
-{: .prompt-warning } 
-
 **Neste artigo, vamos realizar um *upgrade in-place de Windows Server em uma VM do Azure*, entendendo os pré-requisitos, os cuidados necessários, a criação da mídia de upgrade e a execução do processo de forma organizada.**
 
 ---
@@ -28,8 +25,8 @@ Imagine um cenário onde você já possui diversas VMs de produção, com aplica
 
 - Possuir permissão de no mínimo Contributor da Subscription;
 - Validar previamente a matriz de upgrade da versão atual para a versão de destino - [Versões](https://learn.microsoft.com/pt-br/azure/virtual-machines/windows-in-place-upgrade#prerequisites);
-- Garantir mínimo 32GB de espaço livre suficiente no disco do sistema operacional;
-- Utilizar **Managed Disks** é obrigatório;
+- Garantir mínimo **32GB** de espaço livre suficiente no disco do sistema operacional;
+- Somente **Managed Disks** é aceito, outro tipo não é suportado;
 - Criar snapshot do disco do sistema operacional e, se houver disco de dados também;
 - *(opcional)* Desabilitar temporariamente antivírus e firewall dentro do S.O.
 
@@ -43,7 +40,6 @@ Imagine um cenário onde você já possui diversas VMs de produção, com aplica
 
 > Antes de qualquer clique, valide a matriz oficial de upgrade. 
 {: .prompt-warning }
-<br>
 
 A primeira tarefa é validar se a sua origem e o seu destino fazem parte de um **caminho de upgrade suportado**.
 
@@ -55,6 +51,7 @@ A própria documentação da Microsoft orienta
 <br>
 
 ***Opcional***
+<br>
 A Microsoft sugere que executemos **[Ferramenta de avaliação de atualização do sistema operacional Windows da VM do Azure](https://learn.microsoft.com/pt-br/troubleshoot/azure/virtual-machines/windows/windows-vm-osupgradeassessment-tool)** onde valida se o Sistema Operacional possui compatibilidade com o modelo de upgrade in-place. É uma ferramenta bem simples e de fácil utilização, onde você irá realizar o download da ferramenta diretamente do [repositório oficial no Github](https://github.com/Azure/azure-support-scripts/blob/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) para a VM que será realizada essa atualização e executá-lo.
 
 Caso ocorra alguma falha, ele retornará uma imagem parecida com essa:
