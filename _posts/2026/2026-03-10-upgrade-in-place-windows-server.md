@@ -371,17 +371,6 @@ Tudo depende do contexto, da criticidade da carga e da estratégia de operação
 Até a próxima!
 
 ```powershell
----
-#layout: post
-title: "Atualizando o Windows Server em uma VM do Azure sem surpresas"
-date: 2026-03-09 08:00:00 -03:00
-categories: [Azure]
-tags: [azure, windows-server, upgrade, in-place-upgrade, virtual-machine]
-slug: 'upgrade-in-place-windows-server-azure-vm'
-image:
-  path: assets/img/005/001-windows-server-upgrade-azure.png
----
-
 Fala PessoALL! Estava um pouco sumido né? Mas agora estamos com a nossa programação normal de volta!
 
 Quando falamos de **atualização** de um Windows Server dentro do Azure, muita gente ainda pensa que o único caminho é criar uma nova máquina, migrar tudo manualmente e depois descomissionar a antiga. *(até pouco tempo sim rsrs)*
@@ -460,7 +449,7 @@ Adapte os parâmetros de acordo com o seu ambiente. Sugerimos que copie e cole e
 
 1 - Abra o Cloud Shell, copie e cole o código abaixo (após ter ajustado conforme a sua necessidade), e basta clicar em enter e aguardar o fim da configuração.
 
-```powershell
+
 # Resource group onde o disco de upgrade será criado
 $resourceGroup = "WindowsServerUpgrades"
 
@@ -516,7 +505,7 @@ Set-AzDiskImageReference -Disk $diskConfig -Id $image.Id -Lun 0
 New-AzDisk -ResourceGroupName $resourceGroup `
            -DiskName $diskName `
            -Disk $diskConfig
-```
+
 
 ---
 
