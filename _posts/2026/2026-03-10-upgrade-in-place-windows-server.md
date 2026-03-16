@@ -1,7 +1,7 @@
 ---
 #layout: post
 title: "Atualizando o Windows Server em uma VM do Azure sem surpresas"
-date: 2026-03-11 15:00:00 -03:00
+date: 2026-03-16 12:00:00 -03:00
 categories: [Azure]
 tags: [azure, windows-server, upgrade, in-place-upgrade, virtual-machine]
 slug: 'upgrade-in-place-windows-server-azure-vm'
@@ -11,59 +11,41 @@ image:
 
 Fala PessoALL! Estava um pouco sumido né? Mas agora estamos com a nossa programação normal de volta!
 
-Quando falamos de atualização de um Windows Server dentro do Azure, muita gente ainda pensa que o único caminho é criar uma nova máquina, migrar tudo manualmente e depois descomissionar a antiga. E sendo bem sincero, em muitos cenários esse ainda continua sendo um excelente caminho.
-
-Mas nem sempre ele é o mais prático.
+Quando falamos de atualização de um Windows Server de uma VM do Azure, muita gente ainda pensa que o único caminho é criar uma nova máquina, migrar tudo manualmente e depois descomissionar a antiga.
 
 Imagine aquele ambiente onde você já tem uma VM pronta, com aplicação instalada, integrações funcionando, acessos configurados, ajustes finos feitos ao longo do tempo e uma janela de manutenção relativamente curta. Nesses casos, recriar tudo do zero pode gerar muito retrabalho. É justamente aqui que o **upgrade in-place** pode fazer bastante sentido.
 
 Hoje a Microsoft já possui um processo suportado para realizar **upgrade in-place em VMs Windows Server no Azure**, permitindo elevar a versão do sistema operacional sem necessariamente reconstruir toda a máquina do zero.
 
-Mas como tudo em infraestrutura, isso precisa ser feito com critério.
-
-Neste artigo, vamos realizar um **upgrade in-place de Windows Server em uma VM do Azure**, entendendo os pré-requisitos, os cuidados necessários, a criação da mídia de upgrade e a execução do processo de forma organizada, prática e suportada.
+**Neste artigo, vamos realizar um *upgrade in-place de Windows Server em uma VM do Azure*, entendendo os pré-requisitos, tomando todos os cuidados necessários, criando uma mídia temporária para o upgrade e a execução do processo de forma organizada, prática e suportada.**
 
 ---
 
 ## Quando esse método faz sentido?
 
-Antes de sair clicando em tudo, vale alinhar expectativa.
+Antes de sair clicando em tudo, precisamos alinhar as expectativa. O upgrade in-place costuma fazer bastante sentido quando você tem:
 
-O upgrade in-place costuma fazer bastante sentido quando você tem:
-
-- uma VM já em produção com aplicações configuradas;
-- integrações que dariam trabalho para recriar;
-- necessidade de reduzir tempo de rebuild;
-- uma janela de mudança menor;
-- necessidade de atualizar o sistema operacional mantendo a estrutura atual.
-
-Agora, se a sua intenção é aproveitar todos os recursos mais modernos nativos do Azure, padronizar tudo do zero e já sair com uma VM “nova de verdade”, muitas vezes o melhor caminho ainda continua sendo criar uma nova VM e migrar a carga.
-
-E esse ponto é importante, porque o upgrade in-place atualiza o sistema operacional, mas **não transforma a VM em uma imagem nova nativa do Azure**. Ou seja, ela continua carregando algumas características da imagem original.
+- Uma VM já em produção com aplicações configuradas;
+- Integrações que dariam trabalho para recriar;
+- Necessidade de reduzir tempo de rebuild e atualizar o sistema operacional mantendo a estrutura atual;
 
 ---
 
 ### Pre-requisitos
 
-Antes de começar, valide os seguintes pontos:
+- Possuir permissão de no mínimo Contributor da Subscription;
+- Validar previamente a matriz de upgrade da versão atual para a versão de destino - [Versões](https://learn.microsoft.com/pt-br/azure/virtual-machines/windows-in-place-upgrade#prerequisites);
+- Garantir mínimo **32GB** de espaço livre suficiente no disco do sistema operacional;
+- Somente **Managed Disks** é aceito, outro tipo não é suportado;
+- Criar snapshot do disco do sistema operacional e, se houver disco de dados também;
+- *(opcional)* Desabilitar temporariamente antivírus e firewall dentro do S.O.
 
-- Possuir permissão de no mínimo **Contributor** na Subscription ou no Resource Group;
-- Confirmar se a **origem e o destino** fazem parte de um caminho de upgrade suportado;
-- Utilizar **Managed Disks**, pois outros tipos não são suportados neste processo;
-- Garantir espaço livre suficiente no disco do sistema operacional;
-- Criar snapshot do disco do sistema operacional e, se houver, também dos discos de dados;
-- Validar se a VM está preparada para **Windows Server volume licensing**;
-- Considerar o idioma da VM, pois a mídia especial de upgrade é criada em **en-US**;
-- Opcionalmente, desabilitar temporariamente antivírus, antispyware e firewall durante a janela de manutenção.
-
-> **A Microsoft também recomenda a execução da ferramenta de assessment antes do processo para validar compatibilidade e possíveis impedimentos.** 
+> A Microsoft também recomenda a execução da ferramenta de assessment antes do processo para validar compatibilidade e possíveis impedimentos.
 {: .prompt-info }
 
 ---
 
 ## Mão na massa!
-
----
 
 #### Passo 1
 
@@ -73,72 +55,57 @@ Na prática, não é porque a VM está no Azure que qualquer salto de versão se
 
 Hoje, para cenários não clusterizados, o Windows Server 2025 aceita upgrade direto a partir do **Windows Server 2012 R2 e versões posteriores**. Já para outras versões, a recomendação continua sendo validar a matriz oficial antes da execução.
 
-**[INSERIR IMAGEM DA MATRIZ OFICIAL DE UPGRADE]**
+![winserver-upgrade](assets/img/005/002-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
-> **Em ambiente real, esse é o tipo de etapa que evita retrabalho antes mesmo da janela de manutenção começar.** 
+***Opcional***
+<br>
+A Microsoft sugere que executemos **[Ferramenta de avaliação de atualização do sistema operacional Windows da VM do Azure](https://learn.microsoft.com/pt-br/troubleshoot/azure/virtual-machines/windows/windows-vm-osupgradeassessment-tool)** onde valida se o Sistema Operacional possui compatibilidade com o modelo de upgrade in-place. É uma ferramenta bem simples e de fácil utilização, onde você irá realizar o download da ferramenta diretamente do [repositório oficial no Github](https://github.com/Azure/azure-support-scripts/blob/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) para a VM que será realizada essa atualização e executá-lo.
+
+Caso ocorra alguma falha, ele retornará uma imagem parecida com essa:
+![winserver-upgrade](assets/img/005/003-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
+
+> Em ambiente real, esse é o tipo de etapa que evita retrabalho antes mesmo da janela de manutenção começar.
 {: .prompt-info }
 
 ---
 
 #### Passo 2
 
-A Microsoft disponibiliza uma ferramenta chamada **Azure VM Windows OS Upgrade Assessment Tool**, que ajuda a validar a compatibilidade da máquina com o processo de upgrade in-place.
+Como todo administrador, você precisa pensar sempre na proteção e restauração em caso de algum problema durante o processo de atualização. Nessa etapa iremos realizar um snapshot do disco para (caso seja necessário) restaurá-lo em seguida.
 
-Essa ferramenta é útil para identificar previamente:
+> Caso você tenha sido designado para realizar um upgrade de mais de **5 / 10 / 50** VMs, nós temos um artigo que lhe auxiliará a realizar esses snapshots de forma automatizada! [Criando Snapshots de VMs no Azure com TAGs](https://blog.ruizsolutions.online/posts/criando-snapshot-de-vms-atraves-de-tags/). 
+{: .prompt-info }
+<br>
 
-- caminho de upgrade suportado;
-- possíveis incompatibilidades;
-- problemas de preparação do ambiente;
-- limitações que podem impedir a atualização.
+Essa etapa é o que vai te salvar caso o upgrade falhe no meio do processo ou o sistema não volte de forma saudável.
 
-A ideia aqui é simples: quanto mais problema você encontrar antes, menos chance de transformar a janela de mudança em dor de cabeça.
+> Upgrade in-place sem snapshot é aposta. E ambiente corporativo não combina com aposta. 
+{: .prompt-danger }
+<br>
 
-1. Acesse a documentação oficial da ferramenta de avaliação e realize o download diretamente do repositório oficial na VM que será atualizada;
-2. Execute a ferramenta e valide o resultado apresentado.
+1 - No portal do Azure, acesse o Disco da VM em questão em Disks > OS Disk:
+![winserver-upgrade](assets/img/005/004-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
+![winserver-upgrade](assets/img/005/005-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
-**[INSERIR IMAGEM DA FERRAMENTA DE ASSESSMENT]**
+2 - Já no disco, selecione **"Create Snapshot"**, insira um nome fácil de identificar e seguindo as melhores práticas de nomemclatura sugeridas pelo CAF. Mude o tipo de snapshot para FULL e selecione o tipo de storage para Standard HDD (locally-redundant storage):
 
-> **Caso a ferramenta identifique alguma falha, corrija antes de prosseguir.** 
-{: .prompt-warning }
+![winserver-upgrade](assets/img/005/006-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
+![winserver-upgrade](assets/img/005/007-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
+
+E então siga com as demais configurações padrões até que seja gerado um snapshot do disco do Sistema Operacional:
+
+![winserver-upgrade](assets/img/005/008-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
 ---
 
 #### Passo 3
-
-Agora vamos validar alguns pontos que parecem simples, mas que fazem bastante diferença no sucesso do processo.
-
-1. **Confirme se a VM utiliza Managed Disks**, pois esse processo aceita somente esse modelo;
-2. **Verifique se há espaço livre suficiente no disco do sistema operacional**. Não é o tipo de validação para fazer “no limite”; trabalhe sempre com folga;
-3. **Valide o tipo de licenciamento da VM**, pois a mídia especial de upgrade fornecida pelo Azure exige que a máquina esteja preparada para **Windows Server volume licensing**;
-4. **Revise o idioma do sistema**, pois a mídia especial de upgrade utilizada nesse processo é criada em **en-US**. Em ambientes fora desse padrão, vale validar isso com atenção antes de avançar.
-
-> **Esse é um daqueles pontos que parecem detalhe... até o dia em que travam a mudança.** 
-{: .prompt-warning }
-
----
-
-#### Passo 4
-
-Como todo administrador, você precisa pensar sempre na proteção e restauração em caso de algum problema durante o processo.
-
-Nesta etapa iremos criar snapshot do disco do sistema operacional e, caso existam, também dos discos de dados. Esse procedimento é importante para possibilitar rollback caso o upgrade falhe ou a VM não volte de forma saudável.
-
-1. Acesse a VM no portal do Azure;
-2. Vá até a seção de discos;
-3. Crie snapshot do disco do sistema operacional;
-4. Caso existam discos de dados, crie snapshot deles também.
-
-**[INSERIR IMAGEM DA TELA DE SNAPSHOT]**
-
-> **Upgrade in-place sem snapshot é aposta. E ambiente corporativo não combina com aposta.** 
-{: .prompt-danger }
-
-> **Caso você tenha sido designado para realizar upgrade de mais de 5 / 10 / 50 VMs, aqui no blog já temos um artigo que lhe ajudará a criar snapshots de forma automatizada:** [Criando Snapshots de VMs no Azure com TAGs](/posts/criando-snapshot-de-vms-atraves-de-tags/) 
-{: .prompt-info }
-
----
-
-#### Passo 5
 
 No Azure, o processo oficial para Windows Server utiliza uma mídia de upgrade em formato de **Managed Disk**, criada a partir de uma imagem especial do Marketplace.
 
@@ -150,78 +117,73 @@ Essa imagem utiliza como base:
 
 Abaixo está um exemplo de script em PowerShell para criar esse disco de mídia de upgrade.
 
-1. Abra o **Cloud Shell** no portal do Azure;
+1. Abra o **Cloud Shell** no portal do Azure (Para melhor visualização sugerimos que após o carregamento do Cloud Shell você clique em NOVA SESSÃO, assim ele abrirá uma nova aba para facilitar o manuseio);
 2. Ajuste os parâmetros conforme a sua necessidade;
 3. Execute o código abaixo e aguarde o fim da criação do disco.
 
 ```powershell
-# Resource Group onde o disco de upgrade será criado
+# Resource group of the source VM
 $resourceGroup = "WindowsServerUpgrades"
 
-# Mesma região da VM que será atualizada
-$location = "BrazilSouth"
+# Location of the source VM
+$location = "WestUS2"
 
-# Zona da VM, se existir. Para VMs regionais, use ""
+# Zone of the source VM, if any
 $zone = ""
 
-# Nome do disco de upgrade
+# Disk name for the that will be created
 $diskName = "WindowsServer2025UpgradeDisk"
 
-# SKU da mídia de upgrade
-# Opções:
-# server2025Upgrade
-# server2022Upgrade
-# server2019Upgrade
-# server2016Upgrade
-# server2012Upgrade
+# Target version for the upgrade - must be one of these five strings: server2025Upgrade, server2022Upgrade, server2019Upgrade, server2016Upgrade or server2012Upgrade
 $sku = "server2025Upgrade"
 
-# Parâmetros comuns
+# Common parameters
+
 $publisher = "MicrosoftWindowsServer"
 $offer = "WindowsServerUpgrade"
 $managedDiskSKU = "Standard_LRS"
 
-# Obtém a versão mais recente da imagem especial de upgrade
-$versions = Get-AzVMImage -PublisherName $publisher -Location $location -Offer $offer -Skus $sku |
-    Sort-Object -Descending {[version] $_.Version}
+#
+# Get the latest version of the special (hidden) VM Image from the Azure Marketplace
 
+$versions = Get-AzVMImage -PublisherName $publisher -Location $location -Offer $offer -Skus $sku | sort-object -Descending {[version] $_.Version	}
 $latestString = $versions[0].Version
 
-# Obtém a imagem
-$image = Get-AzVMImage -Location $location `
-                       -PublisherName $publisher `
-                       -Offer $offer `
-                       -Skus $sku `
-                       -Version $latestString
+# Get the special (hidden) VM Image from the Azure Marketplace by version - the image is used to create a disk to upgrade to the new version
 
-# Cria o Resource Group, se necessário
+$image = Get-AzVMImage -Location $location -PublisherName $publisher -Offer $offer -Skus $sku -Version $latestString
+
+#
+# Create Resource Group if it doesn't exist
+#
+
 if (-not (Get-AzResourceGroup -Name $resourceGroup -ErrorAction SilentlyContinue)) {
-    New-AzResourceGroup -Name $resourceGroup -Location $location
+    New-AzResourceGroup -Name $resourceGroup -Location $location    
 }
 
-# Cria a configuração do disco
-if ($zone) {
-    $diskConfig = New-AzDiskConfig -SkuName $managedDiskSKU `
-                                   -CreateOption FromImage `
-                                   -Zone $zone `
-                                   -Location $location
-}
-else {
-    $diskConfig = New-AzDiskConfig -SkuName $managedDiskSKU `
-                                   -CreateOption FromImage `
-                                   -Location $location
+#
+# Create Managed Disk from LUN 0
+#
+
+if ($zone){
+    $diskConfig = New-AzDiskConfig -SkuName $managedDiskSKU -CreateOption FromImage -Zone $zone -Location $location
+} else {
+    $diskConfig = New-AzDiskConfig -SkuName $managedDiskSKU -CreateOption FromImage -Location $location
 }
 
 Set-AzDiskImageReference -Disk $diskConfig -Id $image.Id -Lun 0
 
-# Cria o disco de upgrade
-New-AzDisk -ResourceGroupName $resourceGroup `
-           -DiskName $diskName `
-           -Disk $diskConfig
+New-AzDisk -ResourceGroupName $resourceGroup -DiskName $diskName -Disk $diskConfig
 ```
 
-[INSERIR IMAGEM DO CLOUD SHELL / DISCO CRIADO]
+Ficará assim:
+![winserver-upgrade](assets/img/005/009-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
+![winserver-upgrade](assets/img/005/010-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
+> Caso você não saiba o nome corretamente da região do seu recurso, acesse essa lista -> [List of All Regions on Azure](https://learn.microsoft.com/en-us/azure/reliability/regions-list?tabs=all)
+{: .prompt-info }
 > Esse disco deve ser criado na mesma região da VM e, se a VM estiver em zona, preferencialmente na mesma zona também. 
 {: .prompt-info }
 
