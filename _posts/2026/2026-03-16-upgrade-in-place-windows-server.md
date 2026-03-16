@@ -223,7 +223,7 @@ Se está tudo OK, podemo seguir com a atualização.
 3 - Nesse ponto vamos executar a atualização do Windows, para isso você precisará validar qual a versão do Windows a ser executada.
 Para Windows Server 2016, 2019, 2022 ou 2025, você pode utilizar o seguinte comando:
 
-```bash
+```powershell
 .\setup.exe /auto upgrade /dynamicupdate disable /eula accept
 ```
 
@@ -231,7 +231,7 @@ Esse comando ajuda a automatizar o processo e evita travas por aceite manual do 
 
 Ou, se você estiver lidando especificamente com um alvo Windows Server 2012, o fluxo é mais manual e o setup é iniciado apenas com:
 
-```bash
+```powershell
 .\setup.exe
 ```
 
