@@ -182,46 +182,48 @@ Ficará assim:
 ![winserver-upgrade](assets/img/005/010-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
-> Caso você não saiba o nome corretamente da região do seu recurso, acesse essa lista -> [List of All Regions on Azure](https://learn.microsoft.com/en-us/azure/reliability/regions-list?tabs=all)
+> OBS 1 - Caso você não saiba o nome corretamente da região do seu recurso, acesse essa lista -> [List of All Regions on Azure](https://learn.microsoft.com/en-us/azure/reliability/regions-list?tabs=all)
 {: .prompt-info }
-> Esse disco deve ser criado na mesma região da VM e, se a VM estiver em zona, preferencialmente na mesma zona também. 
+> OBS 2 - Esse disco deve ser criado na mesma região da VM e, se a VM estiver em zona, preferencialmente na mesma zona também. 
+{: .prompt-info }
+> OBS 3 - O disco que foi provisionado possui um espaço de exatamente 10GB apenas para essa função. 
 {: .prompt-info }
 
 
-#### Passo 6
+#### Passo 4
 
-Com o disco criado, anexe essa mídia de upgrade na VM.
+Com o disco criado, vamos anexar esse disco de upgrade na VM.
 
-No portal do Azure, abra a VM;
+1 - No portal do Azure, navegue até a sua VM > clique em Disks > clique em Attach existing disks > Selecione o disco de upgrade criado anteriormente > e salve a configuração.
 
-Vá em Disks;
-
-Clique em Attach existing disks;
-
-Selecione o disco de upgrade criado anteriormente;
-
-Salve a configuração.
-
-[INSERIR IMAGEM DO ANEXO DO DISCO NA VM]
+![winserver-upgrade](assets/img/005/011-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
 > Esse disco precisa estar na mesma região da VM e, se a VM estiver em zona, na mesma zona também. 
 {: .prompt-info }
 
 ---
 
-#### Passo 7
+#### Passo 5
 
-Agora sim, com a VM em execução, conecte-se via RDP ou Azure Bastion, descubra a letra da unidade onde a mídia foi anexada e inicie o setup.
+Agora sim vem a cereja do bolo, com a VM em execução, conecte-se via RDP ou Azure Bastion e identifique se o disco foi montado corretamente na VM.
 
-Acesse a VM via RDP ou Bastion;
+1 - No botão do Windows, clique com o botão direito e selecione Gerenciamento de Disco (Ou Disk Management):
+![winserver-upgrade](assets/img/005/012-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
+![winserver-upgrade](assets/img/005/013-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
-Abra o PowerShell como Administrador;
+Se está tudo OK, podemo seguir com a atualização.
 
-Navegue até a unidade onde o disco de upgrade foi montado.
+2 - Abra o PowerShell com privilégios de administrador e então navegue até a unidade onde o disco de upgrade foi montado:
+![winserver-upgrade](assets/img/005/014-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
+3 - Nesse ponto vamos executar a atualização do Windows, para isso você precisará validar qual a versão do Windows a ser executada.
 Para Windows Server 2016, 2019, 2022 ou 2025, você pode utilizar o seguinte comando:
 
-```powershell
+```bash
 .\setup.exe /auto upgrade /dynamicupdate disable /eula accept
 ```
 
@@ -229,16 +231,27 @@ Esse comando ajuda a automatizar o processo e evita travas por aceite manual do 
 
 Ou, se você estiver lidando especificamente com um alvo Windows Server 2012, o fluxo é mais manual e o setup é iniciado apenas com:
 
-```powershell
+```bash
 .\setup.exe
 ```
 
-Depois disso, basta seguir o assistente de instalação e escolher a opção de manter arquivos, configurações e aplicações, quando aplicável ao cenário suportado.
+![winserver-upgrade](assets/img/005/015-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
+![winserver-upgrade](assets/img/005/016-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
-[INSERIR IMAGEM DO SETUP SENDO EXECUTADO]
+Depois disso, irá aparecer as opções de seleção para qual sistema operacional será realizado o upgrade:
+
+![winserver-upgrade](assets/img/005/017-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
 > Selecione com atenção a imagem correta de destino conforme a versão atual e a matriz de upgrade suportada. 
 {: .prompt-warning }
+
+Em seguida o upgrade in-place estará sendo executado, basta aguardar o processo finalizar por completo, nessa etapa a VM irá reiniciar algumas vezes (e isso é normal)
+
+![winserver-upgrade](assets/img/005/018-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+<br>
 
 ---
 
