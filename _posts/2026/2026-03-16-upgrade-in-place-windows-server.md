@@ -329,14 +329,6 @@ Outro detalhe também que você irá notar no Portal do Azure é que a versão i
 
 ---
 
-## Inspiração
-
-**Esse artigo foi inspirado no vídeo do Raphael Andrade**:
-
-<iframe width="700" height="512" src="https://www.youtube.com/embed/-T7AAPQ9Sos" title="Como Atualizar o Windows Server no Azure | Upgrade In-Place" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
----
-
 ## Artigos
 
 | :---|:---|
