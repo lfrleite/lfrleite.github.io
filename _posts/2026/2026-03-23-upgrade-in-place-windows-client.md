@@ -5,7 +5,6 @@ date: 2026-03-16 17:30:00 -03:00
 categories: [Azure][Windows]
 tags: [azure, windows-client, windows-10, windows-11, upgrade]
 slug: 'upgrade-in-place-windows-client-azure-vm'
-
 image:
   path: assets/img/006/001-windows-client-upgrade-azure.png
 ---
