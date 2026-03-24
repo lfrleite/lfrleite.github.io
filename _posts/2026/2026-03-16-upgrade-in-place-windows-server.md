@@ -9,7 +9,7 @@ image:
   path: assets/img/005/001-windows-server-upgrade-azure.png
 ---
 
-Fala PessoALL! Estava um pouco sumido né? Mas agora estamos com a nossa programação normal de volta!
+Fala pessoALL! Estava um pouco sumido né? Mas agora estamos com a nossa programação normal de volta!
 
 Quando falamos de atualização de um Windows Server de uma VM do Azure, muita gente ainda pensa que o único caminho é criar uma nova máquina, migrar tudo manualmente e depois descomissionar a antiga.
 
@@ -67,7 +67,7 @@ Caso ocorra alguma falha, ele retornará uma imagem parecida com essa:
 <br>
 
 > Em ambiente real, esse é o tipo de etapa que evita retrabalho antes mesmo da janela de manutenção começar.
-{: .prompt-info }
+{: .prompt-tip }
 
 ---
 
@@ -78,13 +78,11 @@ Como todo administrador, você precisa pensar sempre na proteção e restauraç�
 > Caso você tenha sido designado para realizar um upgrade de mais de **5 / 10 / 50** VMs, nós temos um artigo que lhe auxiliará a realizar esses snapshots de forma automatizada! [Criando Snapshots de VMs no Azure com TAGs](https://blog.ruizsolutions.online/posts/criando-snapshot-de-vms-atraves-de-tags/). 
 {: .prompt-info }
 <br>
-
 Essa etapa é o que vai te salvar caso o upgrade falhe no meio do processo ou o sistema não volte de forma saudável.
 
 > Upgrade in-place sem snapshot é aposta. E ambiente corporativo não combina com aposta. 
 {: .prompt-danger }
 <br>
-
 1 - No portal do Azure, acesse o Disco da VM em questão em Disks > OS Disk:
 ![winserver-upgrade](assets/img/005/004-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
@@ -247,7 +245,7 @@ Depois disso, irá aparecer as opções de seleção para qual sistema operacion
 
 > Selecione com atenção a imagem correta de destino conforme a versão atual e a matriz de upgrade suportada. 
 {: .prompt-warning }
-
+<br>
 Em seguida o upgrade in-place estará sendo executado, nesse ponto é só aguardar.
 
 ![winserver-upgrade](assets/img/005/018-windows-server-upgrade-azure.png){: .shadow .rounded-10}
@@ -264,7 +262,9 @@ Nesse momento, você pode acompanhar o progresso por meio da funcionalidade de s
 ![winserver-upgrade](assets/img/005/019-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
-Por se tratar de um snapshot (print de tela), ele não atualizará a imagem sozinho, você pode clicar no botão Refresh/Atualizar logo acima para acompanhar todo o processo de atualização:
+> Por se tratar de um snapshot (print de tela), ele não atualizará a imagem sozinho, você pode clicar no botão Refresh/Atualizar logo acima para acompanhar todo o processo de atualização:
+{: .prompt-tip }
+<br>
 ![winserver-upgrade](assets/img/005/020-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 

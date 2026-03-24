@@ -9,7 +9,7 @@ image:
   path: assets/img/006/001-windows-client-upgrade-azure.png
 ---
 
-Fala pessoALL! Tudo certo?
+Fala pessoALL! Tudo bem com vocês?
 
 Quando falamos de atualização de **Windows Client** dentro do Azure, só pensamos em uma única saída: **Subir uma nova VM do zero já com a versão mais nova do sistema operacional**
 
@@ -38,7 +38,7 @@ O upgrade in-place de Windows Client costuma fazer bastante sentido quando você
 E aqui vai um ponto importante: a própria Microsoft recomenda que, ao sair de **Windows 10 para Windows 11**, a melhor prática seja **implantar novas VMs**, justamente para evitar problemas de compatibilidade e garantir uma configuração mais otimizada.
 
 > Isso não significa que o upgrade in-place não possa funcionar. Significa apenas que você precisa saber exatamente onde ele faz sentido e onde ele pode te dar mais trabalho do que benefício. 
-{: .prompt-tip }
+{: .prompt-info }
 
 ---
 
@@ -105,18 +105,18 @@ Agora vamos executaremos a **[Ferramenta de avaliação de atualização do sist
   - Secure Boot;
   - vTPM.
 
-1 - Baixe o [Azure VM Windows OS Upgrade Assessment Tool](https://github.com/Azure/azure-support-scripts/tree/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) diretamente do repositório oficial do GitHub na VM que será atualizada;
+**1** - Baixe o [Azure VM Windows OS Upgrade Assessment Tool](https://github.com/Azure/azure-support-scripts/tree/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) diretamente do repositório oficial do GitHub na VM que será atualizada;
 ![winclient-upgrade](assets/img/006/004-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 ![winclient-upgrade](assets/img/006/005-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-2 - Agora abra um PowerShell com **privilégios elevados de administrador**, navegue até onde foi salvo o Windows_OSUpgrade_Assessment_Validation.ps1 e execute-o;
+**2** - Agora abra um PowerShell com **privilégios elevados de administrador**, navegue até onde foi salvo o Windows_OSUpgrade_Assessment_Validation.ps1 e execute-o;
 ![winclient-upgrade](assets/img/006/006-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-3 - Analise o resultado antes de seguir para as próximas etapas. Caso o resultado for negativo, precisaremos analisar os requisitos, ajusta-los e só então poderemos prosseguir.
+**3** - Analise o resultado antes de seguir para as próximas etapas. Caso o resultado for negativo, precisaremos analisar os requisitos, ajusta-los e só então poderemos prosseguir.
 ![winclient-upgrade](assets/img/006/007-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
@@ -130,92 +130,82 @@ Vamos navegar no portal do Azure e identificar o que houve e como podemos ajusta
 > Localizados os verdadeiros ofensores, podemos de fato trabalhar em ajustar para refletir aos **pré-requisitos** cidados acima
 {: .prompt-info }
 
-4 - Primeiramente precisaremos desligar/desalocar a VM, caso contrário, nenhuma atividade será permitida:
+**4** - Primeiramente precisaremos desligar/desalocar a VM, caso contrário, nenhuma atividade será permitida:
 ![winclient-upgrade](assets/img/006/009-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-5 - Para habilitarmos o Trusted Launch, Secure Boot e Virtual TPM, basta navegarmos até Configurações > Security Type e mudarmos de *Standard* para **Trusted launch virtual machines**:
+**5** - Para habilitarmos o Trusted Launch, Secure Boot e Virtual TPM, basta navegarmos até Configurações > Security Type e mudarmos de *Standard* para **Trusted launch virtual machines**:
 ![winclient-upgrade](assets/img/006/010-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 ![winclient-upgrade](assets/img/006/011-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-> Como podemos notar, tivemos 4 pontos de falha: Trusted Launch, Secure Boot, Virtual TPM e Physical Memory (4GB)
+> Este 'upgrade' do Security Type de *Standard* para **Trusted launch virtual machines** é permitido apenas uma vez, ou seja, não sendo possível reverter essa ação.
 {: .prompt-warning }
+
+Ajustados os passos de segurança exigidos para realizarmos o upgrade corretamente, agora precisamos mudar o SKU da VM de 4GB para 8GB. Esta etapa pode ser apenas temporário durante o upgrade.
+
+**6** - Agora iremos no menu Availability + scale > Size. Escolhemos um sku que contenha disponibilidade na região e que atenda os requisitos mencionados acima:
+Eu decidi escolher o sku D2as_v5 que estava disponível no momento deste laboratório
+
+![winclient-upgrade](assets/img/006/012-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+Finalizados todos os ajustes necessários, podemos ligar novamente a VM e seguir com os próximos passos!
 
 ---
 
 #### Passo 3
 
-Agora vamos revisar os requisitos mínimos e o cenário da VM.
-Para upgrade de Windows Client no Azure, a documentação orienta que a VM tenha pelo menos:
+Nesse ponto você como um administrador do ambiente Microsoft Azure precisará se precaver antes de qualquer problema que possa vir a ocorrer durante o upgrade, para isso se faz necessário realizar um **snapshot** do disco do Sistema Operacional (E do disco de dados se houver).
 
-- **2 GB de RAM**;
-- **12 GB livres no disco do sistema**.
-
-Mas quando falamos especificamente de **Windows 11**, vale trabalhar com o que a própria Microsoft exige para o sistema operacional:
-
-- **4 GB de RAM**;
-- **64 GB de armazenamento**;
-- **UEFI**;
-- **Secure Boot**;
-- **TPM 2.0**.
-
-Então aqui vai minha recomendação prática: se o alvo é Windows 11, não trabalhe no “mínimo do mínimo”. Trabalhe no que o Windows 11 realmente espera encontrar.
-
-Além disso:
-
-1 - Confirme se a VM **não está usando OS disk efêmero**;
-
-2 - Revise se a geração da VM e os recursos de segurança estão coerentes com o destino;
-
-3 - Valide se você não está tentando atualizar um cenário **multi-session / pooled host pool** via in-place, porque aí o caminho é outro.
-
-> Esse é um daqueles momentos onde cinco minutos de validação podem economizar horas de troubleshooting depois. 
-{: .prompt-warning }
+Como já abordamos no artigo anterior como realizar esses passos, basta seguir as etapas já publicadas [AQUI!](https://blog.ruizsolutions.online/posts/upgrade-in-place-windows-server-azure-vm/#passo-2)
 
 ---
 
 #### Passo 4
 
-Como todo administrador, você precisa pensar sempre em rollback.
+Na documentação oficial **não possui um script pronto** para gerar o disco já com uma imagem assim como demonstrei no Upgrade in-place do Windows Server, então precisaremos realizar esse procedimento manualmente. Vamos adicionar um novo disco de dados que será utilizado somente para os arquivos que serão extraídos da mídia oficial do Sistema Operacional Windows 11.
 
-Antes da atualização, faça backup da VM. A própria documentação da Microsoft recomenda o uso do **Azure Backup**, embora você também possa utilizar outra solução de backup confiável.
+**1** - No portal do Azure acesse Settings > Disks. Em Data Disks clique em **+ Create and attach a new disk** > Insira um nome, Ex.: upgradewindows > Selecione o tipo de Storage como Standard SSD LRS > Inclua um tamanho/size de apenas 10GB e clique em aplicar/apply:
+![winclient-upgrade](assets/img/006/013-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
-Mais do que isso: o ideal é **validar a restauração**. Não adianta apenas dizer “o backup foi criado”. O que importa é saber se ele realmente te devolve uma VM funcional caso algo dê errado no meio do caminho.
+**2** - Agora conecte-se via RDP ou Azure Bastion e identifique se o disco foi montado corretamente na VM. No botão do Windows, clique com o botão direito e selecione Gerenciamento de Disco (Ou Disk Management):
+![winclient-upgrade](assets/img/006/014-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
-1 - Configure ou valide o backup da VM;
+- **2.1** - Vai aparecer um alerta informando sobre a inicialização do disco e estará selecionado o tipo de partição como GPT, basta clicar em OK.
+![winclient-upgrade](assets/img/006/015-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
-2 - Execute o backup antes da janela de mudança;
+- **2.2** - Com o disco montado, agora precisaremos formatá-lo, para isso basta clicar com o botão direito e mcima do disco 1 (ou o número do disco que aparecerá caso tenha mais de um disco de dados) e clique em **New Simple Volume...** > Clique em Next > Mantenha o volume total do disco e clique em Next > Caso queira mudar a letra pode realizar a alteração e clicar em Next > Em **Volume label:** entre com um nome amigável como *Windows Upgrade* por exemplo e clique em Next > E por fim clique em Finish.
+![winclient-upgrade](assets/img/006/016-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
-3 - Sempre que possível, confirme que uma restauração seria viável.
+![winclient-upgrade](assets/img/006/017-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
-> Upgrade in-place sem backup é aposta. E ambiente corporativo não combina com aposta. 
-{: .prompt-danger }
+![winclient-upgrade](assets/img/006/018-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+**3** - Com o disco devidamente montado e disponível, vamos fazer o download da ISO oficial diretamente no site da Microsoft, acesse diretamente pelo link <https://www.microsoft.com/en-us/software-download/windows11>. Na página de download da ISO aparecerão 3 opções: *Windows 11 Installation Assistant* | *Create Windows 11 Installation Media* | **Download Windows 11 Disk Image (ISO) for x64 devices**. Para realizar o download da ISO basta descer a página até a seleção da ISO, após selecionar clica em confirm > Selecione a linguagem da ISO (Selecione com cautela a ISO corretamente para não gerar retrabalho) > Finalmente para fazer o download, clique em **64-bit Download** e aguarde o download finalizar para montarmos a ISO.
+![winclient-upgrade](assets/img/006/019-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+![winclient-upgrade](assets/img/006/020-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+![winclient-upgrade](assets/img/006/021-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+**4** - 
 
 ---
 
 #### Passo 5
 
-Com a VM validada e protegida, podemos partir para o processo em si.
-
-Diferente do Windows Server, aqui não existe aquela etapa de criar um disco especial de upgrade via Marketplace. Para Windows Client compatível, o fluxo suportado passa pelo próprio **Windows Update**.
-
-1 - Conecte-se à VM via **RDP** ou **Azure Bastion**;
-
-2 - Acesse:
-
-**Configurações > Atualização e Segurança > Windows Update**
-
-3 - Clique em **Verificar se há atualizações**;
-
-4 - Aguarde até que a **Feature Update** correspondente apareça;
-
-5 - Quando a atualização for exibida, clique em **Baixar e instalar agora**.
-
-> Se a Feature Update não aparecer, pare e revise o assessment, os requisitos do Windows 11, o modelo da VM e os recursos de segurança. Não tente “forçar” no improviso antes de validar o motivo. 
-{: .prompt-warning }
 
 ---
 
