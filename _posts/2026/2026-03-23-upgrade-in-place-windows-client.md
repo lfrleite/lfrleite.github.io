@@ -2,7 +2,7 @@
 #layout: post
 title: "Atualizando uma VM do Azure com Windows 10 para Windows 11 sem formatação"
 date: 2026-03-23 18:00:00 -03:00
-categories: [Azure][Windows]
+categories: [Azure]
 tags: [azure, windows-client, windows-10, windows-11, upgrade]
 slug: 'upgrade-in-place-windows-client-azure-vm'
 image:
