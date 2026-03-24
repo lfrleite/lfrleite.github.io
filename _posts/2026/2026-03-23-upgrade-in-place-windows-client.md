@@ -195,13 +195,17 @@ Na documentação oficial **não possui um script pronto** para gerar o disco j�
 ![winclient-upgrade](assets/img/006/019-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-**3** - Com o disco devidamente montado e disponível, vamos fazer o download da ISO oficial diretamente no site da Microsoft, acesse diretamente pelo link <https://www.microsoft.com/en-us/software-download/windows11>. Na página de download da ISO aparecerão 3 opções: *Windows 11 Installation Assistant* | *Create Windows 11 Installation Media* | **Download Windows 11 Disk Image (ISO) for x64 devices**. Para realizar o download da ISO basta descer a página até a seleção da ISO, após selecionar clica em confirm > Selecione a linguagem da ISO (Selecione com cautela a ISO corretamente para não gerar retrabalho) > Finalmente para fazer o download, clique em **64-bit Download** e aguarde o download finalizar para montarmos a ISO.
+**3** - Com o disco devidamente montado e disponível, vamos fazer o download da ISO oficial diretamente no site da Microsoft, acesse diretamente pelo link <https://www.microsoft.com/en-us/software-download/windows11>. 
+Na página de download da ISO aparecerão 3 opções: *Windows 11 Installation Assistant* | *Create Windows 11 Installation Media* | **Download Windows 11 Disk Image (ISO) for x64 devices**. 
+Para realizar o download da ISO basta descer a página até a seleção da ISO, após selecionar clica em confirm 
 ![winclient-upgrade](assets/img/006/020-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
+- **3.1** - Selecione a linguagem da ISO (Selecione com cautela a ISO corretamente para não gerar retrabalho)
 ![winclient-upgrade](assets/img/006/021-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
+- **3.2** - Finalmente para fazer o download, clique em **64-bit Download** e aguarde o download finalizar para montarmos a ISO.
 ![winclient-upgrade](assets/img/006/022-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
