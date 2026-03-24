@@ -192,7 +192,7 @@ Mais do que isso: o ideal é **validar a restauração**. Não adianta apenas di
 
 3 - Sempre que possível, confirme que uma restauração seria viável.
 
-![windows-client-upgrade](assets/img/006/004-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+
 
 > Upgrade in-place sem backup é aposta. E ambiente corporativo não combina com aposta. {: .prompt-danger }
 
@@ -216,7 +216,7 @@ Diferente do Windows Server, aqui não existe aquela etapa de criar um disco esp
 
 5 - Quando a atualização for exibida, clique em **Baixar e instalar agora**.
 
-![windows-client-upgrade](assets/img/006/005-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+
 
 > Se a Feature Update não aparecer, pare e revise o assessment, os requisitos do Windows 11, o modelo da VM e os recursos de segurança. Não tente “forçar” no improviso antes de validar o motivo. {: .prompt-warning }
 
@@ -236,7 +236,7 @@ Nesse momento, você pode acompanhar o andamento por meio de:
 
 Isso ajuda bastante a entender se a máquina ainda está no meio da atualização ou se já voltou para um estado operacional.
 
-![windows-client-upgrade](assets/img/006/006-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+
 
 > Lembre-se: o screenshot do Boot Diagnostics não se atualiza sozinho. Use o botão de **Refresh** para acompanhar a evolução do processo. {: .prompt-info }
 
@@ -259,7 +259,7 @@ Aqui você deve conferir pelo menos os seguintes pontos:
 
 Se o upgrade foi de Windows 10 para Windows 11, valide também se todos os recursos de segurança e compatibilidade continuam funcionando como esperado.
 
-![windows-client-upgrade](assets/img/006/007-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+
 
 > Não trate “a VM ligou” como sinônimo de “a mudança acabou”. O que precisa voltar é a experiência do usuário e a operação. {: .prompt-warning }
 
@@ -281,7 +281,7 @@ Depois da validação, faça a limpeza e o fechamento da mudança.
 
 Essa limpeza ajuda bastante a recuperar espaço e evitar carregar arquivos desnecessários do processo de atualização.
 
-![windows-client-upgrade](assets/img/006/008-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+
 
 > Utilize a limpeza de disco e remova instalações anteriores quando tiver certeza de que a VM está estável e o rollback não será mais necessário. {: .prompt-warning }
 
@@ -304,7 +304,7 @@ não ficam disponíveis para essa VM após esse tipo de processo.
 
 Além disso, as propriedades da imagem no portal do Azure, como **publisher**, **offer** e **plan**, podem continuar refletindo a imagem original, mesmo que o sistema operacional dentro da VM tenha sido atualizado.
 
-![windows-client-upgrade](assets/img/006/009-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+
 
 > Em outras palavras: o sistema operacional foi atualizado, mas a VM não virou uma “nova imagem nativa” do Azure. {: .prompt-warning }
 
