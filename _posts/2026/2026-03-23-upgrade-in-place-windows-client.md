@@ -85,7 +85,7 @@ Ou seja: antes de pensar no “como”, primeiro precisamos validar o “onde”
 A Microsoft sugere que executemos **[Ferramenta de avaliação de atualização do sistema operacional Windows da VM do Azure](https://learn.microsoft.com/pt-br/troubleshoot/azure/virtual-machines/windows/windows-vm-osupgradeassessment-tool)** onde valida se o Sistema Operacional possui compatibilidade com o modelo de upgrade in-place. É uma ferramenta bem simples e de fácil utilização, onde você irá realizar o download da ferramenta diretamente do [repositório oficial no Github](https://github.com/Azure/azure-support-scripts/blob/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) para a VM que será realizada essa atualização e executá-lo.
 
 Caso ocorra alguma falha, ele retornará uma imagem parecida com essa:
-![winclient-upgrade](assets/img/006/003-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/003-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 > Esse é o tipo de validação que te salva antes da janela de manutenção começar. 
@@ -107,14 +107,14 @@ Agora vamos executaremos a **[Ferramenta de avaliação de atualização do sist
   - vTPM.
 
 1 - Baixe o [Azure VM Windows OS Upgrade Assessment Tool](https://github.com/Azure/azure-support-scripts/tree/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) diretamente do repositório oficial do GitHub na VM que será atualizada;
-![winclient-upgrade](assets/img/006/004-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/004-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-![winclient-upgrade](assets/img/006/005-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/005-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 2 - Agora abra um PowerShell com **privilégios elevados de administrador**, navegue até onde foi salvo o Windows_OSUpgrade_Assessment_Validation.ps1 e execute-o;
-![winclient-upgrade](assets/img/006/006-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/006-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 3 - Analise o resultado antes de seguir para as próximas etapas. Caso o resultado for negativo, precisaremos analisar os requisitos, ajusta-los e só então poderemos prosseguir.
