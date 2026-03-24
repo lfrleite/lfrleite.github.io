@@ -149,7 +149,6 @@ Vamos navegar no portal do Azure e identificar o que houve e como podemos ajusta
 #### Passo 3
 
 Agora vamos revisar os requisitos mínimos e o cenário da VM.
-
 Para upgrade de Windows Client no Azure, a documentação orienta que a VM tenha pelo menos:
 
 - **2 GB de RAM**;
