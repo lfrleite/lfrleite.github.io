@@ -123,6 +123,9 @@ Agora vamos executaremos a **[Ferramenta de avaliação de atualização do sist
 > Como podemos notar, tivemos 4 pontos de falha: Trusted Launch, Secure Boot, Virtual TPM e Physical Memory (4GB)
 {: .prompt-warning }
 
+> Se a sua VM corresponder corretamente aos requisitos, pode pular as demais etapas e seguir para o passo 3.
+{: .prompt-tip }
+
 Vamos navegar no portal do Azure e identificar o que houve e como podemos ajustar:
 ![winclient-upgrade](assets/img/006/008-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
@@ -152,7 +155,9 @@ Eu decidi escolher o sku D2as_v5 que estava disponível no momento deste laborat
 ![winclient-upgrade](assets/img/006/012-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-Finalizados todos os ajustes necessários, podemos ligar novamente a VM e seguir com os próximos passos!
+Finalizados todos os ajustes necessários, podemos ligar novamente a VM e executar novamente o **OS Upgrade Assessment Tool**!
+![winclient-upgrade](assets/img/006/013-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
@@ -169,35 +174,35 @@ Como já abordamos no artigo anterior como realizar esses passos, basta seguir a
 Na documentação oficial **não possui um script pronto** para gerar o disco já com uma imagem assim como demonstrei no Upgrade in-place do Windows Server, então precisaremos realizar esse procedimento manualmente. Vamos adicionar um novo disco de dados que será utilizado somente para os arquivos que serão extraídos da mídia oficial do Sistema Operacional Windows 11.
 
 **1** - No portal do Azure acesse Settings > Disks. Em Data Disks clique em **+ Create and attach a new disk** > Insira um nome, Ex.: upgradewindows > Selecione o tipo de Storage como Standard SSD LRS > Inclua um tamanho/size de apenas 10GB e clique em aplicar/apply:
-![winclient-upgrade](assets/img/006/013-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
-<br>
-
-**2** - Agora conecte-se via RDP ou Azure Bastion e identifique se o disco foi montado corretamente na VM. No botão do Windows, clique com o botão direito e selecione Gerenciamento de Disco (Ou Disk Management):
 ![winclient-upgrade](assets/img/006/014-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-- **2.1** - Vai aparecer um alerta informando sobre a inicialização do disco e estará selecionado o tipo de partição como GPT, basta clicar em OK.
+**2** - Agora conecte-se via RDP ou Azure Bastion e identifique se o disco foi montado corretamente na VM. No botão do Windows, clique com o botão direito e selecione Gerenciamento de Disco (Ou Disk Management):
 ![winclient-upgrade](assets/img/006/015-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-- **2.2** - Com o disco montado, agora precisaremos formatá-lo, para isso basta clicar com o botão direito e mcima do disco 1 (ou o número do disco que aparecerá caso tenha mais de um disco de dados) e clique em **New Simple Volume...** > Clique em Next > Mantenha o volume total do disco e clique em Next > Caso queira mudar a letra pode realizar a alteração e clicar em Next > Em **Volume label:** entre com um nome amigável como *Windows Upgrade* por exemplo e clique em Next > E por fim clique em Finish.
+- **2.1** - Vai aparecer um alerta informando sobre a inicialização do disco e estará selecionado o tipo de partição como GPT, basta clicar em OK.
 ![winclient-upgrade](assets/img/006/016-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
+- **2.2** - Com o disco montado, agora precisaremos formatá-lo, para isso basta clicar com o botão direito e mcima do disco 1 (ou o número do disco que aparecerá caso tenha mais de um disco de dados) e clique em **New Simple Volume...** > Clique em Next > Mantenha o volume total do disco e clique em Next > Caso queira mudar a letra pode realizar a alteração e clicar em Next > Em **Volume label:** entre com um nome amigável como *Windows Upgrade* por exemplo e clique em Next > E por fim clique em Finish.
 ![winclient-upgrade](assets/img/006/017-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 ![winclient-upgrade](assets/img/006/018-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-**3** - Com o disco devidamente montado e disponível, vamos fazer o download da ISO oficial diretamente no site da Microsoft, acesse diretamente pelo link <https://www.microsoft.com/en-us/software-download/windows11>. Na página de download da ISO aparecerão 3 opções: *Windows 11 Installation Assistant* | *Create Windows 11 Installation Media* | **Download Windows 11 Disk Image (ISO) for x64 devices**. Para realizar o download da ISO basta descer a página até a seleção da ISO, após selecionar clica em confirm > Selecione a linguagem da ISO (Selecione com cautela a ISO corretamente para não gerar retrabalho) > Finalmente para fazer o download, clique em **64-bit Download** e aguarde o download finalizar para montarmos a ISO.
 ![winclient-upgrade](assets/img/006/019-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
+**3** - Com o disco devidamente montado e disponível, vamos fazer o download da ISO oficial diretamente no site da Microsoft, acesse diretamente pelo link <https://www.microsoft.com/en-us/software-download/windows11>. Na página de download da ISO aparecerão 3 opções: *Windows 11 Installation Assistant* | *Create Windows 11 Installation Media* | **Download Windows 11 Disk Image (ISO) for x64 devices**. Para realizar o download da ISO basta descer a página até a seleção da ISO, após selecionar clica em confirm > Selecione a linguagem da ISO (Selecione com cautela a ISO corretamente para não gerar retrabalho) > Finalmente para fazer o download, clique em **64-bit Download** e aguarde o download finalizar para montarmos a ISO.
 ![winclient-upgrade](assets/img/006/020-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 ![winclient-upgrade](assets/img/006/021-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+![winclient-upgrade](assets/img/006/022-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 **4** - 
