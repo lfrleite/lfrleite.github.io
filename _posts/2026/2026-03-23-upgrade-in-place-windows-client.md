@@ -209,12 +209,37 @@ Para realizar o download da ISO basta descer a página até a seleção da ISO, 
 ![winclient-upgrade](assets/img/006/022-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-**4** - 
+**4** - Agora podemos montar a ISO e em seguida extrair o conteúdo para o disco de dados. Para isso acesse a pasta Downloads, clique com o botão direito na ISO e selecione **Mount**, logo em seguida aparecerá uma mensagem informando se gostaria de abrir o arquivo, basta clicar em Open:
+![winclient-upgrade](assets/img/006/023-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+**5** - Acesse a unidade montada (geralmente com o nome DVD Drive), selecione todo o conteúdo e copie para o disco que criamos anteriormente, neste exemplo utilizando a Unidade D: com o nome de Windows Upgrade:
+![winclient-upgrade](assets/img/006/024-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
 #### Passo 5
 
+Agora vamos para o finalmente! Nessa etapa de fato iremos realizar a atualização do Windows 10 para o Windows 11. 
+
+> Por isso, como um administrador, não podemos simplesmente sair instalando tudo de uma vez. Um dos principais papeis de um Administrador de Infra e Azure é saber o que fazer, como fazer e quando fazer.
+{: .prompt-info }
+
+**1** - Ainda com o PowerShell em execução como Administrador, mude para a unidade onde foi montado o disco que copiamos todo o conteúdo da ISO original contendo o Windows 11 e em seguida execute o comando:
+
+```powershell
+.\setup.exe /auto upgrade /dynamicupdate disable /eula accept
+```
+![winclient-upgrade](assets/img/006/025-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+Nesse ponto é onde a *mágica* acontece e o Windows começará a analisar se está tudo de acordo e irá realizar o Upgrade In-place.
+![winclient-upgrade](assets/img/006/026-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
+
+![winclient-upgrade](assets/img/006/027-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
