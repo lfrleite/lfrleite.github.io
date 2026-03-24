@@ -77,15 +77,15 @@ Mas aqui existe um detalhe importantíssimo:
 
 Ou seja: antes de pensar no “como”, primeiro precisamos validar o “onde”.
 
-![windows-client-upgrade](assets/img/006/002-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+![winclient-upgrade](assets/img/006/002-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
-<br>
 A Microsoft sugere que executemos **[Ferramenta de avaliação de atualização do sistema operacional Windows da VM do Azure](https://learn.microsoft.com/pt-br/troubleshoot/azure/virtual-machines/windows/windows-vm-osupgradeassessment-tool)** onde valida se o Sistema Operacional possui compatibilidade com o modelo de upgrade in-place. É uma ferramenta bem simples e de fácil utilização, onde você irá realizar o download da ferramenta diretamente do [repositório oficial no Github](https://github.com/Azure/azure-support-scripts/blob/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) para a VM que será realizada essa atualização e executá-lo.
 
 Caso ocorra alguma falha, ele retornará uma imagem parecida com essa:
-![windows-client-upgrade](assets/img/006/003-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/003-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
 > Esse é o tipo de validação que te salva antes da janela de manutenção começar. 
@@ -107,39 +107,39 @@ Agora vamos executaremos a **[Ferramenta de avaliação de atualização do sist
   - vTPM.
 
 1 - Baixe o [Azure VM Windows OS Upgrade Assessment Tool](https://github.com/Azure/azure-support-scripts/tree/master/RunCommand/Windows/Windows_OSUpgrade_Assessment_Validation) diretamente do repositório oficial do GitHub na VM que será atualizada;
-![windows-client-upgrade](assets/img/006/004-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/004-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
-![windows-client-upgrade](assets/img/006/005-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/005-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
 2 - Agora abra um PowerShell com **privilégios elevados de administrador**, navegue até onde foi salvo o Windows_OSUpgrade_Assessment_Validation.ps1 e execute-o;
-![windows-client-upgrade](assets/img/006/006-windows-server-upgrade-azure.png){: .shadow .rounded-10}
+![winclient-upgrade](assets/img/006/006-windows-server-upgrade-azure.png){: .shadow .rounded-10}
 <br>
 
 3 - Analise o resultado antes de seguir para as próximas etapas. Caso o resultado for negativo, precisaremos analisar os requisitos, ajusta-los e só então poderemos prosseguir.
-
-![windows-client-upgrade](assets/img/006/007-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+![winclient-upgrade](assets/img/006/007-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
+
 > Como podemos notar, tivemos 4 pontos de falha: Trusted Launch, Secure Boot, Virtual TPM e Physical Memory (4GB)
 {: .prompt-warning }
 
 Vamos navegar no portal do Azure e identificar o que houve e como podemos ajustar:
-![windows-client-upgrade](assets/img/006/008-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+![winclient-upgrade](assets/img/006/008-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 > Localizados os verdadeiros ofensores, podemos de fato trabalhar em ajustar para refletir aos **pré-requisitos** cidados acima
 {: .prompt-info }
 
 4 - Primeiramente precisaremos desligar/desalocar a VM, caso contrário, nenhuma atividade será permitida:
-![windows-client-upgrade](assets/img/006/009-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+![winclient-upgrade](assets/img/006/009-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 5 - Para habilitarmos o Trusted Launch, Secure Boot e Virtual TPM, basta navegarmos até Configurações > Security Type e mudarmos de *Standard* para **Trusted launch virtual machines**:
-![windows-client-upgrade](assets/img/006/010-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+![winclient-upgrade](assets/img/006/010-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
-![windows-client-upgrade](assets/img/006/011-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
+![winclient-upgrade](assets/img/006/011-windows-client-upgrade-azure.png){: .shadow .rounded-10 }
 <br>
 
 > Como podemos notar, tivemos 4 pontos de falha: Trusted Launch, Secure Boot, Virtual TPM e Physical Memory (4GB)
@@ -174,7 +174,8 @@ Além disso:
 
 3 - Valide se você não está tentando atualizar um cenário **multi-session / pooled host pool** via in-place, porque aí o caminho é outro.
 
-> Esse é um daqueles momentos onde cinco minutos de validação podem economizar horas de troubleshooting depois. {: .prompt-warning }
+> Esse é um daqueles momentos onde cinco minutos de validação podem economizar horas de troubleshooting depois. 
+{: .prompt-warning }
 
 ---
 
@@ -192,9 +193,8 @@ Mais do que isso: o ideal é **validar a restauração**. Não adianta apenas di
 
 3 - Sempre que possível, confirme que uma restauração seria viável.
 
-
-
-> Upgrade in-place sem backup é aposta. E ambiente corporativo não combina com aposta. {: .prompt-danger }
+> Upgrade in-place sem backup é aposta. E ambiente corporativo não combina com aposta. 
+{: .prompt-danger }
 
 ---
 
@@ -216,9 +216,8 @@ Diferente do Windows Server, aqui não existe aquela etapa de criar um disco esp
 
 5 - Quando a atualização for exibida, clique em **Baixar e instalar agora**.
 
-
-
-> Se a Feature Update não aparecer, pare e revise o assessment, os requisitos do Windows 11, o modelo da VM e os recursos de segurança. Não tente “forçar” no improviso antes de validar o motivo. {: .prompt-warning }
+> Se a Feature Update não aparecer, pare e revise o assessment, os requisitos do Windows 11, o modelo da VM e os recursos de segurança. Não tente “forçar” no improviso antes de validar o motivo. 
+{: .prompt-warning }
 
 ---
 
@@ -237,8 +236,8 @@ Nesse momento, você pode acompanhar o andamento por meio de:
 Isso ajuda bastante a entender se a máquina ainda está no meio da atualização ou se já voltou para um estado operacional.
 
 
-
-> Lembre-se: o screenshot do Boot Diagnostics não se atualiza sozinho. Use o botão de **Refresh** para acompanhar a evolução do processo. {: .prompt-info }
+> Lembre-se: o screenshot do Boot Diagnostics não se atualiza sozinho. Use o botão de **Refresh** para acompanhar a evolução do processo. 
+{: .prompt-info }
 
 ---
 
@@ -260,8 +259,8 @@ Aqui você deve conferir pelo menos os seguintes pontos:
 Se o upgrade foi de Windows 10 para Windows 11, valide também se todos os recursos de segurança e compatibilidade continuam funcionando como esperado.
 
 
-
-> Não trate “a VM ligou” como sinônimo de “a mudança acabou”. O que precisa voltar é a experiência do usuário e a operação. {: .prompt-warning }
+> Não trate “a VM ligou” como sinônimo de “a mudança acabou”. O que precisa voltar é a experiência do usuário e a operação. 
+{: .prompt-warning }
 
 ---
 
@@ -282,8 +281,8 @@ Depois da validação, faça a limpeza e o fechamento da mudança.
 Essa limpeza ajuda bastante a recuperar espaço e evitar carregar arquivos desnecessários do processo de atualização.
 
 
-
-> Utilize a limpeza de disco e remova instalações anteriores quando tiver certeza de que a VM está estável e o rollback não será mais necessário. {: .prompt-warning }
+> Utilize a limpeza de disco e remova instalações anteriores quando tiver certeza de que a VM está estável e o rollback não será mais necessário. 
+{: .prompt-warning }
 
 ---
 
@@ -305,8 +304,8 @@ não ficam disponíveis para essa VM após esse tipo de processo.
 Além disso, as propriedades da imagem no portal do Azure, como **publisher**, **offer** e **plan**, podem continuar refletindo a imagem original, mesmo que o sistema operacional dentro da VM tenha sido atualizado.
 
 
-
-> Em outras palavras: o sistema operacional foi atualizado, mas a VM não virou uma “nova imagem nativa” do Azure. {: .prompt-warning }
+> Em outras palavras: o sistema operacional foi atualizado, mas a VM não virou uma “nova imagem nativa” do Azure. 
+{: .prompt-warning }
 
 ---
 
