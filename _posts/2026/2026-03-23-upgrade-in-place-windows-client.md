@@ -9,7 +9,7 @@ image:
   path: assets/img/006/001-windows-client-upgrade-azure.png
 ---
 
-Fala PessoALL! Tudo certo?
+Fala pessoALL! Tudo certo?
 
 Quando falamos de atualização de **Windows Client** dentro do Azure, só pensamos em uma única saída: **Subir uma nova VM do zero já com a versão mais nova do sistema operacional**
 
@@ -38,7 +38,7 @@ O upgrade in-place de Windows Client costuma fazer bastante sentido quando você
 E aqui vai um ponto importante: a própria Microsoft recomenda que, ao sair de **Windows 10 para Windows 11**, a melhor prática seja **implantar novas VMs**, justamente para evitar problemas de compatibilidade e garantir uma configuração mais otimizada.
 
 > Isso não significa que o upgrade in-place não possa funcionar. Significa apenas que você precisa saber exatamente onde ele faz sentido e onde ele pode te dar mais trabalho do que benefício. 
-{: .prompt-warning }
+{: .prompt-tip }
 
 ---
 
