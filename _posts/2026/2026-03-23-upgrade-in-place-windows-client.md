@@ -5,6 +5,7 @@ date: 2026-03-23 18:00:00 -03:00
 categories: [Azure]
 tags: [azure, windows-client, windows-10, windows-11, upgrade]
 slug: 'upgrade-in-place-windows-client-azure-vm'
+mermaid: true
 image:
   path: assets/img/006/001-windows-client-upgrade-azure.png
 ---
@@ -329,6 +330,8 @@ Por último mas não menos importante, valide cuidadosamente o ambiente e em seg
 - [x] Passo 7 - Validar o sistema operacional e a operação após o upgrade
 - [x] Passo 8 - Fazer limpeza e fechamento da mudança
 
+---
+
 ```mermaid
 flowchart TD
     A[Início] --> B[Validar se a VM está em um cenário suportado]
@@ -350,6 +353,8 @@ flowchart TD
     M --> N[Limpeza e fechamento da mudança]
     N --> O[Fim]
 ```
+
+---
 
 ---
 
