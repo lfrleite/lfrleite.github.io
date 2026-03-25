@@ -352,4 +352,4 @@ No Windows 10, o processo é mais manual, mais próximo do Windows Update tradic
 
 Se for uma VM compatível, bem validada e com backup garantido, o processo pode funcionar muito bem. Tudo depende do contexto, da criticidade da carga e da estratégia operacional do seu ambiente.
 
-Obrigado por acompanhar este artigo até aqui, nos vemos nos próximos!
+Obrigado por acompanhar este artigo até aqui, espero que tenham gostado e que seja bem útil a todos! Não esqueça de compartilhar com quem ainda sofre com essas atividades... Nos vemos em breve!
