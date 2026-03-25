@@ -335,7 +335,7 @@ Por último mas não menos importante, valide cuidadosamente o ambiente e em seg
 ```mermaid
 flowchart TD
     A[Início] --> B[Validar se a VM está em um cenário suportado]
-    B --> C{VM é Windows 10 ou Windows 11 single-session?}
+    B --> C{VM é Windows 10 ou Windows 10 single-session?}
     C -- Não --> Z[Encerrar / Planejar nova VM ou outro método]
     C -- Sim --> D{A VM usa OS Disk efêmero?}
     D -- Sim --> Z
