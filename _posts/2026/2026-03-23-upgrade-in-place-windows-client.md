@@ -329,7 +329,8 @@ Por último mas não menos importante, valide cuidadosamente o ambiente e em seg
 - [x] Passo 7 - Validar o sistema operacional e a operação após o upgrade
 - [x] Passo 8 - Fazer limpeza e fechamento da mudança
 
-```flowchart TD
+```mermaid
+flowchart TD
     A[Início] --> B[Validar se a VM está em um cenário suportado]
     B --> C{VM é Windows 10 ou Windows 11 single-session?}
     C -- Não --> Z[Encerrar<br/>Planejar nova VM ou outro método]
