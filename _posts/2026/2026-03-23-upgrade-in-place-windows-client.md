@@ -330,10 +330,10 @@ Por último mas não menos importante, valide cuidadosamente o ambiente e em seg
 - [x] Passo 8 - Fazer limpeza e fechamento da mudança
 
 ```mermaid
-sequenceDiagram
+flowchart TD
     A[Início] --> B[Validar se a VM está em um cenário suportado]
     B --> C{VM é Windows 10 ou Windows 11 single-session?}
-    C -- Não --> Z[Encerrar<br/>Planejar nova VM ou outro método]
+    C -- Não --> Z[Encerrar / Planejar nova VM ou outro método]
     C -- Sim --> D{A VM usa OS Disk efêmero?}
     D -- Sim --> Z
     D -- Não --> E{Faz parte de pooled host pool no AVD?}
@@ -343,8 +343,8 @@ sequenceDiagram
     G -- Não --> H[Corrigir incompatibilidades]
     H --> F
     G -- Sim --> I[Validar RAM, disco, Secure Boot e vTPM]
-    I --> J[Garantir backup / rollback]
-    J --> K[Iniciar atualização via Windows Update / Feature Update]
+    I --> J[Garantir backup e rollback]
+    J --> K[Iniciar atualização via Windows Update ou Feature Update]
     K --> L[VM reinicia durante o processo]
     L --> M[Validar sistema, apps, rede e acesso remoto]
     M --> N[Limpeza e fechamento da mudança]
