@@ -19,7 +19,7 @@ Mas e o esforço administrativo da equipe de Infra e aplicação para realizar e
 **Daremos continuidade aos artigos anteriores ([Upgrade In-Place para Windows Server](https://blog.ruizsolutions.online/posts/upgrade-in-place-windows-server-azure-vm) e [Upgrade In-Place para Windows Client](https://blog.ruizsolutions.online/posts/upgrade-in-place-windows-client-azure-vm/))Neste artigo, realizaremos um upgrade in-place em VMs Linux do Azure**
 
 
-A ideia aqui não é sair dando `upgrade` em tudo de qualquer jeito. A ideia é entender **quando esse método faz sentido, o que precisa ser validado antes, como reduzir risco e como executar os saltos de versão de forma segura**.
+A ideia aqui não é sair dando *upgrade* em tudo de qualquer jeito. O que eu quero é fazer você entender **quando esse método faz sentido, o que precisa ser validado antes, como reduzir risco e como executar os saltos de versão de forma segura**.
 
 Agora, aqui vai um ponto importante:
 
@@ -30,6 +30,7 @@ Agora, aqui vai um ponto importante:
 
 ## Matriz e fluxos sugeridos para este artigo
 
+**Matriz de Atualizações**
 ```mermaid
 flowchart TD
     A[Ubuntu 18.04] --> B[Ubuntu 20.04]
@@ -40,6 +41,9 @@ flowchart TD
     F --> H[Debian 12]
 ```
 
+---
+
+**Fluxo Sugerido para atualizações**
 ```mermaid
 flowchart TD
     A[Inventário da VM] --> B[Snapshot e backup]
@@ -62,7 +66,7 @@ flowchart TD
 - Possuir no mínimo permissão de **Contributor** na Subscription ou no Resource Group onde a VM está;
 - Acesso administrativo ao sistema operacional via **SSH(Terminal)** ou **Azure Bastion**;
 - Criar **snapshot do OS Disk** e, se existir, também dos discos de dados;
-- Validar se existe espaço livre suficiente em `/`, `/boot` e, quando existir, em volumes usados por logs e cache;
+- Validar se existe espaço livre suficiente em **/**, **/boot** e, quando existir, em volumes usados por logs e cache;
 - revisar **repositórios de terceiros**, PPAs, backports, pinning e pacotes em hold;
 - alinhar uma janela de manutenção realista;
 - validar se há dependência de agentes de monitoramento, backup, segurança, EDR ou antivírus que possam precisar de ajuste após o upgrade.
@@ -78,7 +82,7 @@ flowchart TD
 
 Antes de pensar em destino, descubra o estado atual da VM.
 
-1 - Conecte-se via SSH e execute:
+1 - Acesse as VMs que irão realizar o upgrade via SSH e execute os comandos abaixo:
 
 ```bash
 cat /etc/os-release
@@ -104,11 +108,12 @@ Aqui o objetivo é responder estas perguntas:
 
 1. Estou realmente em **Ubuntu 18.04, 20.04 ou 22.04**?
 2. Estou realmente em **Debian 10 ou 11**?
-3. Existem pacotes presos com `hold`?
+3. Existem pacotes presos com **hold**?
 4. Existem repositórios não oficiais ativos?
 5. Tenho espaço suficiente para passar pelo processo?
 
-Se você identificar muito resíduo, muito pacote fora do padrão ou muitas dependências de terceiros, pare e organize primeiro.
+> Se você identificar muito resíduo, muito pacote fora do padrão ou muitas dependências de terceiros, **pare imediatamente** e organize primeiro.
+{: .prompt-danger }
 
 ---
 
@@ -123,9 +128,9 @@ Como já abordamos no artigo anterior como realizar esses passos, basta seguir a
 
 ---
 
-### Passo 3 — Atualize totalmente a release atual antes de mudar de versão
+### Passo 3
 
-Antes de trocar a release, deixe a release atual no último estado possível.
+Atualize totalmente a release atual antes de mudar de versão. Antes de trocar a release, deixe a release atual no último estado possível.
 
 #### Ubuntu e Debian
 
@@ -142,6 +147,8 @@ sudo apt update && apt upgrade && apt full-upgrade
 ![lnxclient-upgrade](assets/img/007/004-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
+**Para resolvermos isso basta atualizarmos o repositório para o deposito correto:**
+
 ```bash
 cat > /etc/apt/sources.list <<'EOF'
 deb https://archive.debian.org/debian buster main contrib non-free
@@ -156,7 +163,7 @@ EOF
 
 ### Passo 4
 
-Agora vamos enfim iniciar os upgrades. O upgrade no Ubuntu 18.04 para 20.04, o caminho recomendado é feito com o `do-release-upgrade`.
+Agora vamos enfim iniciar os upgrades. Primeiramente faremos o upgrade do **Ubuntu 18.04 para 20.04**.
 
 Primeiro, garanta que o sistema está configurado para seguir somente LTS:
 
@@ -176,40 +183,40 @@ Execute o comando abaixo:
 sudo do-release-upgrade
 ```
 
-1 - Nesta primeira tela pode digitar a letra Y e pressionar a tecla ENTER
+1 - Nesta primeira tela pode digitar a letra **Y** e pressionar a tecla **ENTER**:
 
 ![lnxclient-upgrade](assets/img/007/007-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-Em seguida clique em ENTER novamente (as telas podem variar, por isso analise com cuidado antes de sair aceitando nas primeiras tentativas)
+Em seguida clique em **ENTER** novamente *(as telas podem variar, por isso analise com cuidado antes de sair aceitando nas primeiras tentativas)*:
 
-2 - Por último ele irá questionar se está confiante de seguir para o upgrade, informando que serão removidos alguns pacotes e incluídos novos pacotes. Inclusive também fornecerá a informação do tamanho do download.
-Após analizado, pode digitar Y e novamente pressionar a tecla ENTER.
+2 - Receberemos o questionamento se gostaríamos de inicializar mesmo o upgrade, com algumas informações que serão removidos alguns pacotes e incluídos novos pacotes. Inclusive também fornecerá a informação do tamanho do download.
+Após analizado, pode digitar **Y** e novamente pressionar a tecla **ENTER**:
 
 ![lnxclient-upgrade](assets/img/007/008-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-3 - Irá aparecer uma informação sobre os pacotes que serão instalados e posteriormente precisarão ser restartados, ou seja, ao final do processo irá reinicializar a VM. Basta selecionar YES e continuar.
+3 - Irá aparecer uma informação sobre os pacotes que serão instalados e posteriormente precisarão ser restartados, ou seja, ao final do processo irá reinicializar a VM. Basta selecionar **YES**:
 
 ![lnxclient-upgrade](assets/img/007/009-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-4 - Após as atualizações dos pacotes, a distro irá lhe retornar algumas opções de configuração (como eu mencionei, isso pode variar de ambiente pra ambiente). Caso apareça o mesmo do print abaixo, eu recomendo que só pressione ENTER ou digite N e em seguida pressione a tecla ENTER para manter as configurações anteriores.
+4 - Após as atualizações dos pacotes, a distro irá lhe retornar algumas opções de configuração *(como eu mencionei, isso pode variar de ambiente pra ambiente)*. Caso apareça o mesmo do print abaixo, eu recomendo que só pressione **ENTER** ou digite **N** e em seguida pressione a tecla **ENTER** para manter as configurações anteriores:
 
 ![lnxclient-upgrade](assets/img/007/010-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-Caso apareça uma informação sobre o pacote LXD, pode manter a versão 4.0 (já que estamos atualizando, manteremos sempre as últimas versões disponíveis em todos os pacotes)
+Caso apareça uma informação sobre o pacote LXD, pode manter a versão 4.0 (já que estamos atualizando, manteremos sempre as últimas versões disponíveis em todos os pacotes):
 
 ![lnxclient-upgrade](assets/img/007/011-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-5 - Este será o último passo antes de realizar o upgrade por completo antes da reinicialização, a confirmação dos pacotes que serão removidos. Basta digitar Y e pressionar ENTER.
+5 - Este será o último passo antes de realizar o upgrade por completo antes da reinicialização, a confirmação dos pacotes que serão removidos. Basta digitar **Y** e pressionar **ENTER**.
 
 ![lnxclient-upgrade](assets/img/007/012-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-6 - Ao final irá solicitar que você reinicialize a VM, bastar digitar Y e pressionar ENTER novamente e aguardar o retorno da VM para validar o funcionamento.
+6 - Ao final irá solicitar que você reinicialize a VM, bastar digitar **Y** e pressionar **ENTER** novamente e aguardar o retorno da VM para validar o funcionamento.
 
 > Valide no portal do Microsoft Azure como está atualmente a versão desta VM.
 {: .prompt-tip }
@@ -252,12 +259,16 @@ grep -RhvE '^\s*#|^\s*$' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/
 sudo apt update && apt upgrade && apt full-upgrade
 ```
 
+---
+
 > Recomendo fortemente que após o upgrade realizado, você execute um autoremove e clean para remover dependencias e pacotes e também limpar o cache local.
 {: .prompt-tip }
 
 ```bash
 sudo apt autoremove --purge -y && sudo apt clean
 ```
+
+---
 
 > Aqui eu não vou refazer todo o processo, basta você seguir os mesmos passos acima até a última versão disponível, nesse caso do Ubuntu é 24.04.
 {: .prompt-tip }
