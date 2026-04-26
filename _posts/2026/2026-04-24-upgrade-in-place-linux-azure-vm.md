@@ -584,9 +584,13 @@ No Ubuntu, o caminho que seguimos foi:
 
 - **18.04 → 20.04 → 22.04 → 24.04**
 
+---
+
 E no Debian:
 
 - **10 → 11 → 12**
+
+---
 
 Se você seguir essa linha o upgrade deixa de ser um salto no escuro e passa a ser um processo muito mais previsível, seguro e organizado.
 
