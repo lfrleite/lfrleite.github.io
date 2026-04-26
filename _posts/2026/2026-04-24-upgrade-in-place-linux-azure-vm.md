@@ -93,6 +93,8 @@ df -h
 sudo apt-mark showhold
 ```
 
+---
+
 *Se quiser uma visão ainda melhor dos repositórios ativos:*
 
 ```bash
@@ -101,6 +103,8 @@ grep -RhvE '^\s*#|^\s*$' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/
 **VM UBUNTU**
 ![lnxclient-upgrade](assets/img/007/002-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
+
+---
 
 **VM DEBIAN**
 ![lnxclient-upgrade](assets/img/007/003-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
@@ -165,7 +169,7 @@ EOF
 
 #### Passo 4
 
-Agora vamos enfim iniciar os upgrades. Primeiramente faremos o upgrade do **Ubuntu 18.04 para 20.04**.
+##### Agora vamos enfim iniciar os upgrades. Primeiramente faremos o upgrade do **Ubuntu 18.04 para 20.04**.
 
 Primeiro, garanta que o sistema está configurado para seguir somente LTS:
 
@@ -192,16 +196,22 @@ sudo do-release-upgrade
 
 Em seguida clique em **ENTER** novamente *(as telas podem variar, por isso analise com cuidado antes de sair aceitando nas primeiras tentativas)*:
 
+---
+
 2 - Receberemos o questionamento se gostaríamos de inicializar mesmo o upgrade, com algumas informações que serão removidos alguns pacotes e incluídos novos pacotes. Inclusive também fornecerá a informação do tamanho do download.
 Após analizado, pode digitar **Y** e novamente pressionar a tecla **ENTER**:
 
 ![lnxclient-upgrade](assets/img/007/008-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
+---
+
 3 - Irá aparecer uma informação sobre os pacotes que serão instalados e posteriormente precisarão ser restartados, ou seja, ao final do processo irá reinicializar a VM. Basta selecionar **YES**:
 
 ![lnxclient-upgrade](assets/img/007/009-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
+
+---
 
 4 - Após as atualizações dos pacotes, a distro irá lhe retornar algumas opções de configuração *(como eu mencionei, isso pode variar de ambiente pra ambiente)*. Caso apareça o mesmo do print abaixo, eu recomendo que só pressione **ENTER** ou digite **N** e em seguida pressione a tecla **ENTER** para manter as configurações anteriores:
 
@@ -219,6 +229,8 @@ Caso apareça uma informação sobre o pacote LXD, pode manter a versão 4.0 (j�
 
 ![lnxclient-upgrade](assets/img/007/012-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
+
+---
 
 6 - Ao final irá solicitar que você reinicialize a VM, bastar digitar **Y** e pressionar **ENTER** novamente e aguardar o retorno da VM para validar o funcionamento.
 
@@ -279,7 +291,7 @@ sudo apt autoremove --purge -y && sudo apt clean
 
 ---
 
-**Upgrading Linux (ubuntu 20.04) -> Linux (ubuntu 22.04)**
+##### **Upgrading Linux (ubuntu 20.04) → Linux (ubuntu 22.04)**
 
 ```bash
 sudo do-release-upgrade
@@ -290,7 +302,7 @@ sudo do-release-upgrade
 
 ---
 
-**Upgrading Linux (ubuntu 22.04) -> Linux (ubuntu 24.04)**
+##### **Upgrading Linux (ubuntu 22.04) → Linux (ubuntu 24.04)**
 
 ```bash
 sudo do-release-upgrade
@@ -308,6 +320,9 @@ sudo do-release-upgrade
 
 Agora faremos o  **Upgrdade do Debian 10 para 11**. Aqui existe um detalhe importante: Não será possível utilizarmos o comando "**sudo do-release-upgrade**" - Portanto precisaremos mudar o 'source.list' apontando para a versão subsequente.
 
+> O processo de upgrade para as versões 11 e 12 são direcionáveis através da biblioteca, ou seja, para atualizarmos para o Debian 11 precisamos apontar a bibliioteca **Bullseye**, enquanto para o Debian 12 apontaremos para a biblioteca **Bookworm**.
+{: .prompt-tip }
+
 O **Debian 10 (buster)** já saiu do ciclo LTS e normalmente exige uma atenção maior com repositórios antigos. Em muitos casos, antes do salto você precisará revisar os repositórios e, se necessário, utilizar temporariamente o **Debian Archive**.
 
 1 - Primeiramente vamos conferir como está a versão atual:
@@ -319,6 +334,8 @@ cat /etc/debian_version
 ![lnxclient-upgrade](assets/img/007/018-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
+---
+
 2 - Se o seu **sources.list** ainda estiver apontando para entradas antigas e sem resposta, revise o arquivo.
 
 > Um exemplo de base para **[buster em archive](https://www.debian.org/distrib/archive)** pode ficar assim:
@@ -328,9 +345,9 @@ cat /etc/debian_version
 sudo nano /etc/apt/sources.list
 ```
 
-Copie abaixo o texto e cole no documento. Pressione em seguida **CTRL+X** para Salvar, digite **Y** e em seguida clique em **ENTER** para **Sair**:
+Copie abaixo o texto e cole no documento:
 
-```text
+```bash
 deb http://archive.debian.org/debian buster main contrib non-free
 deb http://archive.debian.org/debian-security buster/updates main contrib non-free
 ```
@@ -338,17 +355,23 @@ deb http://archive.debian.org/debian-security buster/updates main contrib non-fr
 ![lnxclient-upgrade](assets/img/007/019-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
+Pressione em seguida **CTRL+X** para Salvar, digite **Y** e em seguida clique em **ENTER** para **Sair**
+
+---
+
 3 - Após alterado, agora vamos executar os comandos para atualizar os pacotes para preparar antes mesmo de realizarmos o upgrade. Para isso execute o comando abaixo:
 
 ```bash
 sudo apt update && apt upgrade && apt full-upgrade
 ```
 
+---
+
 #### Passo 6
 
-Agora com o terreno bem estruturado, partiremos para o upgrade!
+Agora com o terreno bem estruturado, partiremos para o **upgrade**!
 
-**Upgrading Linux (Debian 10) -> Linux (Debian 11)**
+##### **Upgrading Linux (Debian 10) → Linux (Debian 11)**
 
 1 - Vamos alterar novamente o arquivo **source.list** para **Bullseye**, removendo o *buster*. Acesse o arquivo utilizando o comando nano (ou vim) e cole o texto abaixo:
 
@@ -356,7 +379,7 @@ Agora com o terreno bem estruturado, partiremos para o upgrade!
 sudo nano /etc/apt/sources.list
 ```
 
-```text
+```bash
 deb http://deb.debian.org/debian bullseye main contrib non-free
 deb http://security.debian.org/debian-security bullseye-security main contrib non-free
 deb http://deb.debian.org/debian bullseye-updates main contrib non-free
@@ -364,6 +387,8 @@ deb http://deb.debian.org/debian bullseye-updates main contrib non-free
 
 ![lnxclient-upgrade](assets/img/007/020-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
+
+---
 
 2 - Com o arquivo devidamente alterado, execute o comando abaixo para realizarmos o upgrade
 
@@ -374,22 +399,81 @@ sudo apt update && apt upgrade && apt full-upgrade
 > Assim como acompanhamos com a VM Linux Ubuntu, nessas etapas aparecerão praticamente as mesmas telas questionando sobre quais aplicações serão atualizadas e quais não serão
 {: .prompt-info }
 
-> Ele retornará com o quantitativo de recursos que serão atualizados e quais não serão, basta digitar **Y** e pressionar **ENTER**.
-{: .prompt-info }
+Abaixo apresento um print com o quantitativo de recursos que serão atualizados e quais não serão, como sempre, isso pode variar de recursos instalados por VM.
+
+Basta digitar **Y** e pressionar **ENTER**.
 
 ![lnxclient-upgrade](assets/img/007/021-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-3 - Logo em seguida aparecerão mais informações sobre os serviços e grep options, caso não apareça na tela todas as informações, role com o 'scroll' do mouse pra baixo ou tecle page down no teclado, assim você verá em seguida pedirá que pressione a tecla **Q** para sair
+---
+
+3 - Logo em seguida aparecerão mais informações sobre os serviços e grep options, caso não apareça na tela todas as informações, role com o 'scroll' do mouse pra **baixo** ou tecle **page down** no teclado, assim você verá em seguida pedirá que pressione a tecla **Q** para sair
 
 ![lnxclient-upgrade](assets/img/007/022-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
+
+---
+
+4 - Agora aparecerão algumas informações em sequência como a biblioteca que estão armazenados os recursos como `libpam`, `libc` e `libssl`, nesse ponto ele informa apenas que os serviços precisarão serem restartados.
+
+Basta selecionar **YES** e em seguida pressionar **ENTER** para continuar a configuração:
+
+![lnxclient-upgrade](assets/img/007/023-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+---
+
+5 - Caso a versão do openssh esteja desatualizada, pode aparecer uma informação sobre a nova versão como a imagem logo abaixo. Eu não oriento a fazer essa atualização no momento, primeiramente avalie com a sua equipe de Segurança da Informação em algum comitê para aprovar esta etapa:
+
+![lnxclient-upgrade](assets/img/007/024-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+---
+
+6 - Ao final mostrará um resumo refernete aos pacotes que serão removidos, os que serão atualizados e outros que serão instalados como novos, basta escrever a tecla **Y** e pressionar **ENTER** para finalizar:
+
+![lnxclient-upgrade](assets/img/007/025-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+> Pode aparecer novamente algumas informações repetidas acima, basta ler com atenção e seguir as orientações que já foram repassadas anteriormente.
+{: .prompt-tip }
+
+---
+
+7 - A VM não irá reincializar, simplesmente finalizará o processo e vai 'estacionar' no prompt aguardando alguma interação:
+
+![lnxclient-upgrade](assets/img/007/026-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+Vamos validar com os comandos abaixo, se deu tudo certo:
 
 ```bash
 cat /etc/debian_version
 uname -r
 systemctl --failed
 ```
+
+![lnxclient-upgrade](assets/img/007/027-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+Da mesma maneira, podemos validar diretamente no Portal do Azure como está o *status* atual dessa VM:
+
+![lnxclient-upgrade](assets/img/007/028-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+---
+
+8 - Antes de seguirmos para o próximo distro, assim como fizemos com o Ubuntu Server, vamos remover todo 'lixo' que poderia ofuscar e atrapalhar durante o próximo upgrade.
+
+Execute o comando abaixo:
+
+```bash
+sudo apt autoremove --purge -y && sudo apt clean
+```
+
+![lnxclient-upgrade](assets/img/007/029-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
 
 Se tudo estiver bem, remova a configuração temporária do `Check-Valid-Until`, caso ela tenha sido usada:
 
@@ -399,98 +483,113 @@ sudo rm -f /etc/apt/apt.conf.d/99buster-archive
 
 ---
 
-## Como acompanhar o reboot no Azure
+##### **Upgrading Linux (Debian 11) → Linux (Debian 12)**
 
-Em ambiente Linux, um dos medos mais comuns é simples:
+Aqui usaremos a mesma lógica que fizemos para o Debian 11, vamos simplesmente alterar o arquivo **sources.list** de *Bullseye* para **BOOKWORM**
 
-**“E se a VM não voltar no SSH?”**
+1 - Com seu editor favorito (eu prefiro o nano) edite o arquivo `sources.list` através do caminho `/etc/apt/sources.list`:
 
-Se isso acontecer, vá para o portal do Azure e valide:
+```bash
+sudo nano /etc/apt/sources.list
+```
 
-- **Boot diagnostics**
-- **Serial console**
-- **Activity log**
-- **Status do disco e da VM**
+Apague todo o conteúdo neste arquivo, copie todo o conteúdo deste repositório abaixo e cole:
 
-Se necessário, esse é exatamente o momento em que o snapshot vira seu melhor amigo.
+```bash
+deb http://deb.debian.org/debian bookworm main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security bookworm-security main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian bookworm-updates main contrib non-free non-free-firmware
+```
+
+Para salvar basta pressionar as teclas **CTRL + X** em seguida digite a tecla **Y** e por final tecle **ENTER** para sair.
+
+![lnxclient-upgrade](assets/img/007/030-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
-## Pós-upgrade
-
-Terminou? Ainda não acabou.
-
-Depois de cada salto, eu validaria no mínimo:
-
-- versão do sistema operacional;
-- kernel atual;
-- serviços críticos;
-- portas em escuta;
-- conectividade de rede;
-- uso de disco;
-- agentes de segurança, backup e monitoramento;
-- logs de boot e de serviços.
-
-Comandos úteis:
+2 - Com o arquivo devidamente alterado, vamos executar novamente o comando abaixo para a realização do upgrade:
 
 ```bash
-cat /etc/os-release
+sudo apt update && apt upgrade && apt full-upgrade
+```
+
+> Nessa etapa não vou repetir os prints, pois serão exatamente iguais ao upgrade que fizemos do Debian 10 para o Debian 11
+{: .prompt-info }
+
+> Valide com muita cautela cada etapa, funcionalidade, pacote e bibliotecas. Assim o processo de upgrade será bem sucedido sem nenhuma surpresa
+{: .prompt-warning }
+
+---
+
+3 - E esse é o resultado final do upgrade realizado do Debian 11 para o Debian 12:
+
+```bash
+cat /etc/debian_version
 uname -r
 systemctl --failed
-journalctl -p err -b
-df -h
-free -m
-ip a
-ss -tulpen
 ```
 
-Também vale uma limpeza final:
-
-```bash
-sudo apt autoremove -y
-sudo apt clean
-```
-
-No caso do Ubuntu, revise se algum repositório de terceiros precisa ser reabilitado.
-
-No caso do Debian, revise se ficaram entradas antigas no `sources.list` ou arquivos em `/etc/apt/sources.list.d/` que não fazem mais sentido.
+![lnxclient-upgrade](assets/img/007/031-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
-## Conclusão
+![lnxclient-upgrade](assets/img/007/032-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
 
-Upgrade in-place em Linux no Azure **funciona**, mas precisa ser tratado com disciplina.
+---
 
-No Ubuntu, o caminho seguro aqui foi:
+4 - E por último não se esqueça de remover todos os resíduos deixados durante o upgrade:
+
+```bash
+sudo apt autoremove --purge -y && sudo apt clean
+```
+
+---
+
+### Checklist
+
+- [x] Passo 1 - Validar a versão atual do sistema operacional, kernel, espaço em disco e pacotes em hold;
+- [x] Passo 2 - Revisar repositórios ativos e dependências de terceiros;
+- [x] Passo 3 - Criar snapshot do disco do sistema e, se necessário, dos discos de dados;
+- [x] Passo 4 - Atualizar totalmente a release atual antes de iniciar qualquer salto de versão;
+- [x] Passo 5 - Executar os upgrades sequenciais no **Ubuntu** até a versão final;
+- [x] Passo 6 - Executar os upgrades sequenciais no **Debian** até a versão final;
+- [x] Passo 7 - Validar sistema operacional, kernel, rede, disco e serviços após cada upgrade;
+- [x] Passo 8 - Remover pacotes obsoletos e limpar o cache do APT ao final de cada etapa;
+
+---
+
+## Artigos
+
+| Nome | Link |
+| :---: | :---: |
+| Criando snasphots de várias VMs rapidamente | <https://blog.ruizsolutions.online/posts/criando-snapshot-de-vms-atraves-de-tags/>
+| Ubuntu Server - How to upgrade your Ubuntu release | <https://ubuntu.com/server/docs/how-to/software/upgrade-your-release> |
+| Ubuntu 24.04 LTS release notes | <https://documentation.ubuntu.com/release-notes/24.04> |
+| Ubuntu release cycle | <https://ubuntu.com/about/release-cycle> |
+| Debian Releases | <https://www.debian.org/releases> |
+| Debian 12 release information | <https://www.debian.org/releases/bookworm> |
+
+---
+
+## The End!
+
+É isso ai pessoal, finalmente chegamos ao fim de mais um artigo com bastante detalhe técnico.
+
+O que eu queria destacar é que é possível sim realizar o upgrade in-place também para as distribuições de VMs Linux Ubuntu e Debian. Mas eu adiantei que o melhor a se fazer é ir versão a versão.
+
+No Ubuntu, o caminho que seguimos foi:
 
 - **18.04 → 20.04 → 22.04 → 24.04**
 
-No Debian, o caminho seguro aqui foi:
+E no Debian:
 
 - **10 → 11 → 12**
 
-Perceba que o segredo não está no comando em si.
+Se você seguir essa linha o upgrade deixa de ser um salto no escuro e passa a ser um processo muito mais previsível, seguro e organizado.
 
-O segredo está em:
+Espero que vocês tenham curtido tanto quanto eu curti de produzi-lo. Deixem seus comentários no meu Linkedin sobre o que você achou e se fez sentido! 
 
-- não pular etapas;
-- revisar repositórios;
-- atualizar totalmente antes de cada salto;
-- fazer snapshot;
-- validar a aplicação entre uma etapa e outra.
-
-Se você respeitar isso, o processo deixa de ser um salto no escuro e passa a ser uma mudança muito mais controlada.
-
----
-
-## Referências oficiais
-
-- [Ubuntu Server - How to upgrade your Ubuntu release](https://ubuntu.com/server/docs/how-to/software/upgrade-your-release/)
-- [Ubuntu 24.04 LTS release notes](https://documentation.ubuntu.com/release-notes/24.04/)
-- [Ubuntu release cycle](https://ubuntu.com/about/release-cycle)
-- [Debian 11 Release Notes](https://www.debian.org/releases/bullseye/releasenotes)
-- [Debian 12 Release Notes](https://www.debian.org/releases/bookworm/releasenotes)
-- [Debian Releases](https://www.debian.org/releases/)
-- [Debian 12 release information](https://www.debian.org/releases/bookworm/)
-- [Debian Distribution Archives](https://www.debian.org/distrib/archive)
-
+Obrigado mais uma vez por me acompnharem até aqui! Nos vemos na próxima!

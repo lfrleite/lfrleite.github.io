@@ -356,8 +356,6 @@ flowchart TD
 
 ---
 
----
-
 ## Artigos
 
 | Nome | Link |
