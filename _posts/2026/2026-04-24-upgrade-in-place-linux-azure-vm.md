@@ -12,7 +12,9 @@ image:
 
 Fala pessoALL! Tranquilidade total?
 
-Surgiu aquela necessidade de atualizarmos VMs com o S.O. Linux Ubuntu Server (versões 16, 18 ou 20) ou Debian 10, o caminho mais seguro seria: **criar uma nova máquina, instalar tudo novamente, migrar a aplicação e depois desligar a antiga**.
+Dando sequência aos artigos de atualizações de S.O., mas agora falaremos sobre distros Linux (Ubuntu e Debian). 
+
+Surgiu aquela necessidade de atualizarmos VMs no Azure com o S.O. Linux Ubuntu Server (versões 16, 18 ou 20) ou Debian (versões 10 ou 11), o caminho mais seguro seria: **criar uma nova máquina, instalar tudo novamente, migrar a aplicação e depois desligar a antiga**.
 
 Mas e o esforço administrativo da equipe de Infra e aplicação para realizar esta atividade com o menor tempo possível? Com a chegada da IA onde empresas estão automatizando o que for possível automatizar e assim aumentando a sua produção, a equipe de TI/Infra precisa entregar o igual ou maior com o menor esforço possível, e é justamente aqui que o **upgrade in-place** pode fazer sentido.
 
@@ -28,9 +30,9 @@ Agora, aqui vai um ponto importante:
 
 ---
 
-## Matriz e fluxos sugeridos para este artigo
+### Matriz e fluxos sugeridos para este artigo
 
-**Matriz de Atualizações**
+**Matriz de Atualizações**:
 ```mermaid
 flowchart TD
     A[Ubuntu 18.04] --> B[Ubuntu 20.04]
@@ -43,7 +45,7 @@ flowchart TD
 
 ---
 
-**Fluxo Sugerido para atualizações**
+**Fluxo Sugerido para atualizações**:
 ```mermaid
 flowchart TD
     A[Inventário da VM] --> B[Snapshot e backup]
@@ -61,9 +63,9 @@ flowchart TD
 
 ---
 
-## Pré-requisitos
+### Pré-requisitos
 
-- Possuir no mínimo permissão de **Contributor** na Subscription ou no Resource Group onde a VM está;
+- Possuir no mínimo permissão de **Contributor** na Subscription;
 - Acesso administrativo ao sistema operacional via **SSH(Terminal)** ou **Azure Bastion**;
 - Criar **snapshot do OS Disk** e, se existir, também dos discos de dados;
 - Validar se existe espaço livre suficiente em **/**, **/boot** e, quando existir, em volumes usados por logs e cache;
@@ -78,7 +80,7 @@ flowchart TD
 
 ## Mão na massa!
 
-### Passo 1
+#### Passo 1
 
 Antes de pensar em destino, descubra o estado atual da VM.
 
@@ -112,12 +114,12 @@ Aqui o objetivo é responder estas perguntas:
 4. Existem repositórios não oficiais ativos?
 5. Tenho espaço suficiente para passar pelo processo?
 
-> Se você identificar muito resíduo, muito pacote fora do padrão ou muitas dependências de terceiros, **pare imediatamente** e organize primeiro.
+> Se você identificar muito resíduo, muito pacote fora do padrão ou muitas dependências de terceiros, **pare imediatamente**, organize as pendências primeiro e só então retome os próximos passos para seguir com o upgrade.
 {: .prompt-danger }
 
 ---
 
-### Passo 2
+#### Passo 2
 
 Assim como os artigos anteriores, para isso se faz necessário realizar um **snapshot** do disco do Sistema Operacional (e caso tenha disco de dados também é altamente recomendável).
 
@@ -128,11 +130,11 @@ Como já abordamos no artigo anterior como realizar esses passos, basta seguir a
 
 ---
 
-### Passo 3
+#### Passo 3
 
-Atualize totalmente a release atual antes de mudar de versão. Antes de trocar a release, deixe a release atual no último estado possível.
+Nesse ponto eu sugiro que você atualize totalmente a release atual antes de mudar de versão.
 
-#### Ubuntu e Debian
+O comando abaixo funcionará tanto no **Ubuntu** quanto no **Debian**:
 
 ```bash
 sudo apt update && apt upgrade && apt full-upgrade
@@ -161,7 +163,7 @@ EOF
 
 ---
 
-### Passo 4
+#### Passo 4
 
 Agora vamos enfim iniciar os upgrades. Primeiramente faremos o upgrade do **Ubuntu 18.04 para 20.04**.
 
@@ -211,6 +213,8 @@ Caso apareça uma informação sobre o pacote LXD, pode manter a versão 4.0 (j�
 ![lnxclient-upgrade](assets/img/007/011-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
+---
+
 5 - Este será o último passo antes de realizar o upgrade por completo antes da reinicialização, a confirmação dos pacotes que serão removidos. Basta digitar **Y** e pressionar **ENTER**.
 
 ![lnxclient-upgrade](assets/img/007/012-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
@@ -252,7 +256,7 @@ grep -RhvE '^\s*#|^\s*$' /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/
 > Nesse momento aferimos que a VM está totalmente atualizada e pronta para receber a próxima versão.
 {: .prompt-info }
 
-> Antes de avançarmos para o upgrade da próxima versão do SO, execute novamente os comandos para atualizar toda a base antes.
+> Antes de avançarmos para o upgrade da próxima versão do SO, **execute novamente os comandos para atualizar toda a base antes**.
 {: .prompt-warning }
 
 ```bash
@@ -261,7 +265,7 @@ sudo apt update && apt upgrade && apt full-upgrade
 
 ---
 
-> Recomendo fortemente que após o upgrade realizado, você execute um autoremove e clean para remover dependencias e pacotes e também limpar o cache local.
+> Recomendo fortemente que após o upgrade realizado, você execute um **autoremove** e **clean** para remover dependencias e pacotes e também limpar o cache local.
 {: .prompt-tip }
 
 ```bash
@@ -275,7 +279,7 @@ sudo apt autoremove --purge -y && sudo apt clean
 
 ---
 
-**Linux (ubuntu 20.04) -> Linux (ubuntu 22.04)**
+**Upgrading Linux (ubuntu 20.04) -> Linux (ubuntu 22.04)**
 
 ```bash
 sudo do-release-upgrade
@@ -286,7 +290,7 @@ sudo do-release-upgrade
 
 ---
 
-**Linux (ubuntu 22.04) -> Linux (ubuntu 24.04)**
+**Upgrading Linux (ubuntu 22.04) -> Linux (ubuntu 24.04)**
 
 ```bash
 sudo do-release-upgrade
@@ -295,53 +299,62 @@ sudo do-release-upgrade
 ![lnxclient-upgrade](assets/img/007/017-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
 <br>
 
-> Valide novamente tudo o que for crítico no seu ambiente.
-{: .prompt-danger }
+> Nesse momento todo upgrade para a VM Linux Ubuntu foi finalizada, agora valide novamente tudo o que for crítico no seu ambiente.
+{: .prompt-tip }
 
 ---
 
-### Passo 8
+#### Passo 5
 
-Agora faremos o  **Upgrdade do Debian 10 para 11**. Aqui existe um detalhe importante.
+Agora faremos o  **Upgrdade do Debian 10 para 11**. Aqui existe um detalhe importante: Não será possível utilizarmos o comando "**sudo do-release-upgrade**" - Portanto precisaremos mudar o 'source.list' apontando para a versão subsequente.
 
 O **Debian 10 (buster)** já saiu do ciclo LTS e normalmente exige uma atenção maior com repositórios antigos. Em muitos casos, antes do salto você precisará revisar os repositórios e, se necessário, utilizar temporariamente o **Debian Archive**.
 
-Primeiro, confira a versão:
+1 - Primeiramente vamos conferir como está a versão atual:
 
 ```bash
 cat /etc/debian_version
 ```
 
-Se o seu `sources.list` ainda estiver apontando para entradas antigas e sem resposta, revise o arquivo.
+![lnxclient-upgrade](assets/img/007/018-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
 
-Um exemplo de base para **buster em archive** pode ficar assim:
+2 - Se o seu **sources.list** ainda estiver apontando para entradas antigas e sem resposta, revise o arquivo.
+
+> Um exemplo de base para **[buster em archive](https://www.debian.org/distrib/archive)** pode ficar assim:
+{: .prompt-info }
 
 ```bash
 sudo nano /etc/apt/sources.list
 ```
+
+Copie abaixo o texto e cole no documento. Pressione em seguida **CTRL+X** para Salvar, digite **Y** e em seguida clique em **ENTER** para **Sair**:
 
 ```text
 deb http://archive.debian.org/debian buster main contrib non-free
 deb http://archive.debian.org/debian-security buster/updates main contrib non-free
 ```
 
-Se o APT reclamar de metadata expirada por conta de release arquivada, você pode usar temporariamente:
+![lnxclient-upgrade](assets/img/007/019-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+3 - Após alterado, agora vamos executar os comandos para atualizar os pacotes para preparar antes mesmo de realizarmos o upgrade. Para isso execute o comando abaixo:
 
 ```bash
-echo 'Acquire::Check-Valid-Until "false";' | sudo tee /etc/apt/apt.conf.d/99buster-archive
+sudo apt update && apt upgrade && apt full-upgrade
 ```
 
-Depois atualize o Debian 10 ao máximo:
+#### Passo 6
+
+Agora com o terreno bem estruturado, partiremos para o upgrade!
+
+**Upgrading Linux (Debian 10) -> Linux (Debian 11)**
+
+1 - Vamos alterar novamente o arquivo **source.list** para **Bullseye**, removendo o *buster*. Acesse o arquivo utilizando o comando nano (ou vim) e cole o texto abaixo:
 
 ```bash
-sudo apt update
-sudo apt upgrade -y
-sudo apt full-upgrade -y
-sudo apt autoremove -y
-sudo reboot
+sudo nano /etc/apt/sources.list
 ```
-
-Agora ajuste o `sources.list` para **bullseye**:
 
 ```text
 deb http://deb.debian.org/debian bullseye main contrib non-free
@@ -349,17 +362,28 @@ deb http://security.debian.org/debian-security bullseye-security main contrib no
 deb http://deb.debian.org/debian bullseye-updates main contrib non-free
 ```
 
-Então siga o processo recomendado pelo Debian:
+![lnxclient-upgrade](assets/img/007/020-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+2 - Com o arquivo devidamente alterado, execute o comando abaixo para realizarmos o upgrade
 
 ```bash
-sudo apt update
-sudo apt upgrade --without-new-pkgs -y
-sudo apt full-upgrade -y
-sudo apt autoremove -y
-sudo reboot
+sudo apt update && apt upgrade && apt full-upgrade
 ```
 
-Depois valide:
+> Assim como acompanhamos com a VM Linux Ubuntu, nessas etapas aparecerão praticamente as mesmas telas questionando sobre quais aplicações serão atualizadas e quais não serão
+{: .prompt-info }
+
+> Ele retornará com o quantitativo de recursos que serão atualizados e quais não serão, basta digitar **Y** e pressionar **ENTER**.
+{: .prompt-info }
+
+![lnxclient-upgrade](assets/img/007/021-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+3 - Logo em seguida aparecerão mais informações sobre os serviços e grep options, caso não apareça na tela todas as informações, role com o 'scroll' do mouse pra baixo ou tecle page down no teclado, assim você verá em seguida pedirá que pressione a tecla **Q** para sair
+
+![lnxclient-upgrade](assets/img/007/022-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
 
 ```bash
 cat /etc/debian_version
