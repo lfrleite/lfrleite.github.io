@@ -41,6 +41,7 @@ flowchart TD
 
     E[Debian 10] --> F[Debian 11]
     F --> H[Debian 12]
+    H --> G[Debian 13]
 ```
 
 ---
