@@ -522,7 +522,7 @@ sudo apt update && apt upgrade && apt full-upgrade
 
 ---
 
-3 - E esse é o resultado final do upgrade realizado do Debian 11 para o Debian 12:
+3 - E esse é o resultado final do upgrade realizado do *Debian 11* para o **Debian 12**:
 
 ```bash
 cat /etc/debian_version
@@ -540,7 +540,62 @@ systemctl --failed
 
 ---
 
-4 - E por último não se esqueça de remover todos os resíduos deixados durante o upgrade:
+##### **Upgrading Linux (Debian 12) → Linux (Debian 13)**
+
+Aqui usaremos a mesma lógica que fizemos para o Debian 11, vamos simplesmente alterar o arquivo **sources.list** de *Bookworm* para **TRIXIE**
+
+1 - Com seu editor favorito (eu prefiro o nano) edite o arquivo `sources.list` através do caminho `/etc/apt/sources.list`:
+
+```bash
+sudo nano /etc/apt/sources.list
+```
+
+Apague todo o conteúdo neste arquivo, copie todo o conteúdo deste repositório abaixo e cole:
+
+```bash
+deb http://deb.debian.org/debian trixie main contrib non-free non-free-firmware
+deb http://security.debian.org/debian-security trixie-security main contrib non-free non-free-firmware
+deb http://deb.debian.org/debian trixie-updates main contrib non-free non-free-firmware
+```
+
+Para salvar basta pressionar as teclas **CTRL + X** em seguida digite a tecla **Y** e por final tecle **ENTER** para sair.
+
+![lnxclient-upgrade](assets/img/007/033-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+---
+
+2 - Com o arquivo devidamente alterado para buscar a atualização para a versão Debian 13, vamos executar novamente o comando abaixo:
+
+```bash
+sudo apt update && apt upgrade && apt full-upgrade
+```
+
+> Como de costume, nessa etapa não vou repetir os prints, pois serão exatamente iguais ao upgrade que fizemos do Debian 11 para o Debian 12
+{: .prompt-info }
+
+---
+
+3 - E esse é o resultado final do upgrade realizado do *Debian 12* para o **Debian 13**:
+
+```bash
+cat /etc/debian_version
+uname -r
+systemctl --failed
+```
+
+![lnxclient-upgrade](assets/img/007/034-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+---
+
+![lnxclient-upgrade](assets/img/007/035-upgrade-in-place-linux-azure-vm.png){: .shadow .rounded-10 }
+<br>
+
+---
+
+> E por último não se esqueça de remover todos os resíduos deixados durante o upgrade:
+{: .prompt-tip }
 
 ```bash
 sudo apt autoremove --purge -y && sudo apt clean
@@ -570,7 +625,7 @@ sudo apt autoremove --purge -y && sudo apt clean
 | Ubuntu 24.04 LTS release notes | <https://documentation.ubuntu.com/release-notes/24.04> |
 | Ubuntu release cycle | <https://ubuntu.com/about/release-cycle> |
 | Debian Releases | <https://www.debian.org/releases> |
-| Debian 12 release information | <https://www.debian.org/releases/bookworm> |
+| Debian 13 release information | <https://www.debian.org/releases/trixie/> |
 
 ---
 
@@ -588,7 +643,7 @@ No Ubuntu, o caminho que seguimos foi:
 
 E no Debian:
 
-- **10 → 11 → 12**
+- **10 → 11 → 12 → 13**
 
 ---
 
