@@ -1,7 +1,7 @@
 ---
 #layout: post
 title: "Azure Image Builder na prática: Windows Server 2022/2025 e Linux Ubuntu 24.04 e Debian 13"
-date: 2026-06-07 12:00:00 -03:00
+date: 2026-06-07 08:00:00 -03:00
 categories: [Azure]
 tags: [azure, azure-image-builder, windows-server, linux, golden-image]
 slug: 'azure-image-builder-windows-linux'
