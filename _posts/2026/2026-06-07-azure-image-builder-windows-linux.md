@@ -266,6 +266,9 @@ Pelo portal:
 5. Clique em **Review + Create**;
 6. Clique em **Create**.
 
+![azure-image-builder](assets/img/008/004-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
+
 ---
 
 ## Passo 3 — Criar a VNet dedicada para o build
