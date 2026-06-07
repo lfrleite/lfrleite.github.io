@@ -275,28 +275,51 @@ Pelo portal:
 
 Agora vamos criar uma VNet dedicada para o processo de build.
 
-Neste exemplo, teremos duas subnets:
+Neste exemplo iremos utilizar 2 subnets:
 
 | Subnet                    | Finalidade                                                              |
 | ------------------------- | ----------------------------------------------------------------------- |
 | `snet-aib-build-wus2-001` | Subnet onde a VM temporária de build será criada                        |
 | `snet-aib-aci-wus2-001`   | Subnet reservada para o Azure Container Instance usado no build isolado |
 
+> O Azure Container Instance não é um componente da imagem final e também não é uma aplicação que estamos hospedando. Ele será utilizado pelo Azure VM Image Builder durante o processo de Isolated Image Build, como recurso temporário responsável por parte da execução e orquestração da customização da imagem.
+{: .prompt-info }
 
 1. Pesquise por **Virtual networks**;
 2. Clique em **Create**;
 3. Informe:
 
    * Resource group: `rg-aib-lab-wus2-001`;
-   * Name: `vnet-aib-lab-wus2-001`;
+   * Name:
+   ```text
+   vnet-aib-lab-wus2-001
+   ```
    * Region: `West US 2`;
 4. Em **IP Addresses**, configure:
 
-   * Address space: `10.80.0.0/16`;
+   * Address space:
+   ```text
+   10.250.0.0/16`
+   ```
 5. Crie as subnets:
 
-   * `snet-aib-build-wus2-001` com `10.80.1.0/24`;
-   * `snet-aib-aci-wus2-001` com `10.80.2.0/24`;
+   * Subnet para criação da VM Temporária:
+   ```text
+   snet-aib-build-wus2-001
+   ``` 
+   com 
+   ```text
+   10.250.1.0/24
+   ```
+   
+   * Subnet para criação do ACI de forma isolada:
+    ```text
+    snet-aib-aci-wus2-001
+    ``` 
+    com 
+    ```text
+    10.250.2.0/24
+    ```
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
 
