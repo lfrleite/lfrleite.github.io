@@ -323,6 +323,12 @@ Neste exemplo iremos utilizar 2 subnets:
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
 
+![azure-image-builder](assets/img/008/005-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
+
+> Desde o dia 31/03/2026 a Microsoft deixou de forma padrão habilitado a criação de todas subnets com Private Subnet, ou seja, sem acesso 'default' externo. Se atende a essa marcação durante a criação do seu recurso em seu ambiente.
+{: .prompt-warning }
+
 ---
 
 ## Passo 4 — Ajustar a subnet do ACI
@@ -338,6 +344,9 @@ az network vnet subnet update \
   --name snet-aib-aci-wus2-001 \
   --delegations Microsoft.ContainerInstance/containerGroups
 ```
+
+![azure-image-builder](assets/img/008/006-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 Agora vamos guardar os IDs das subnets, pois eles serão usados no template do Image Builder:
 
@@ -359,6 +368,9 @@ ACI_SUBNET_ID=$(az network vnet subnet show \
 echo $BUILD_SUBNET_ID
 echo $ACI_SUBNET_ID
 ```
+
+![azure-image-builder](assets/img/008/007-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 > Guarde esses valores. Eles serão usados no `vmProfile` dos templates do Azure Image Builder. 
 {: .prompt-tip }
