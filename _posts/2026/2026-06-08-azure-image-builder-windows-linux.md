@@ -263,7 +263,7 @@ Pelo portal:
 5. Clique em **Review + Create**;
 6. Clique em **Create**.
 
-![Azure Image Builder - Resource Group](assets/img/008/002-resource-group-aib.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Resource Group](assets/img/008/002-resource-group-aib.png){: .shadow .rounded-10 }###
 
 Ou pelo Cloud Shell:
 
@@ -308,7 +308,7 @@ Registered
 
 > Se algum provider ainda aparecer como `Registering`, aguarde alguns minutos e valide novamente. Essa etapa é simples, mas é uma das primeiras coisas que podem causar erro se for esquecida. {: .prompt-info }
 
-![Azure Image Builder - Providers registrados](assets/img/008/003-provider-registration.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Providers registrados](assets/img/008/003-provider-registration.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -342,7 +342,7 @@ Pelo portal:
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
 
-![Azure Image Builder - VNet dedicada](assets/img/008/004-vnet-aib.png){: .shadow .rounded-10 }
+###![Azure Image Builder - VNet dedicada](assets/img/008/004-vnet-aib.png){: .shadow .rounded-10 }###
 
 Ou pelo Cloud Shell:
 
@@ -421,7 +421,7 @@ Pelo portal:
 4. Clique em **Review + Create**;
 5. Clique em **Create**.
 
-![Azure Image Builder - Managed Identity](assets/img/008/005-managed-identity-aib.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Managed Identity](assets/img/008/005-managed-identity-aib.png){: .shadow .rounded-10 }###
 
 Ou pelo Cloud Shell:
 
@@ -471,7 +471,7 @@ Pelo portal:
 4. Clique em **Review + Create**;
 5. Clique em **Create**.
 
-![Azure Image Builder - Azure Compute Gallery](assets/img/008/006-compute-gallery.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Azure Compute Gallery](assets/img/008/006-compute-gallery.png){: .shadow .rounded-10 }###
 
 Ou pelo Cloud Shell:
 
@@ -562,7 +562,7 @@ az sig image-definition create \
   --features SecurityType=TrustedLaunchSupported
 ```
 
-![Azure Image Builder - Image Definitions](assets/img/008/007-image-definitions.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Image Definitions](assets/img/008/007-image-definitions.png){: .shadow .rounded-10 }###
 
 > Atenção aqui: o Hyper-V Generation da definição da imagem precisa bater com a geração da imagem base. Se você criar uma definição Gen1 e tentar publicar uma imagem Gen2, o processo vai falhar. {: .prompt-warning }
 
@@ -652,7 +652,7 @@ az role assignment create \
   --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001
 ```
 
-![Azure Image Builder - Role assignment](assets/img/008/008-role-assignment-aib.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Role assignment](assets/img/008/008-role-assignment-aib.png){: .shadow .rounded-10 }###
 
 > Em alguns casos, a propagação de RBAC pode levar alguns minutos. Se o build falhar logo após a criação da role, aguarde um pouco e tente novamente antes de sair alterando tudo. {: .prompt-info }
 
@@ -684,7 +684,7 @@ Esses recursos existem durante o processo de build e são removidos ao final.
 
 > Não saia apagando manualmente o Resource Group temporário no meio do processo. Se for necessário limpar, o ideal é excluir primeiro o Image Template. Apagar recursos temporários na mão pode deixar o template em estado inconsistente. {: .prompt-danger }
 
-![Azure Image Builder - Resource Group temporário](assets/img/008/009-temporary-resource-group.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Resource Group temporário](assets/img/008/009-temporary-resource-group.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -810,7 +810,7 @@ az resource create \
   --is-full-object
 ```
 
-![Azure Image Builder - Template Windows 2022](assets/img/008/010-template-windows-2022.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Template Windows 2022](assets/img/008/010-template-windows-2022.png){: .shadow .rounded-10 }###
 
 Agora execute o build:
 
@@ -853,9 +853,9 @@ O retorno esperado ao final é algo como:
 }
 ```
 
-![Azure Image Builder - Build Windows 2022 em execução](assets/img/008/011-build-windows-2022-running.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Build Windows 2022 em execução](assets/img/008/011-build-windows-2022-running.png){: .shadow .rounded-10 }###
 
-![Azure Image Builder - Build Windows 2022 concluído](assets/img/008/012-build-windows-2022-success.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Build Windows 2022 concluído](assets/img/008/012-build-windows-2022-success.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -870,7 +870,7 @@ Após o build ser concluído, acesse:
 
 Você deverá visualizar uma versão criada automaticamente.
 
-![Azure Image Builder - Versão Windows 2022](assets/img/008/013-gallery-version-windows-2022.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Versão Windows 2022](assets/img/008/013-gallery-version-windows-2022.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -1014,7 +1014,7 @@ az resource invoke-action \
   --action Run
 ```
 
-![Azure Image Builder - Template Windows 2025](assets/img/008/014-template-windows-2025.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Template Windows 2025](assets/img/008/014-template-windows-2025.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -1159,7 +1159,7 @@ az resource invoke-action \
   --action Run
 ```
 
-![Azure Image Builder - Template Ubuntu 24.04](assets/img/008/015-template-ubuntu-2404.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Template Ubuntu 24.04](assets/img/008/015-template-ubuntu-2404.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -1302,7 +1302,7 @@ az resource invoke-action \
   --action Run
 ```
 
-![Azure Image Builder - Template Debian 13](assets/img/008/016-template-debian-13.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Template Debian 13](assets/img/008/016-template-debian-13.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -1322,7 +1322,7 @@ Depois que todos os builds forem concluídos, acesse:
 
 Você deve ter uma versão publicada para cada imagem.
 
-![Azure Image Builder - Todas as imagens na galeria](assets/img/008/017-all-gallery-images.png){: .shadow .rounded-10 }
+###![Azure Image Builder - Todas as imagens na galeria](assets/img/008/017-all-gallery-images.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -1344,7 +1344,8 @@ az vm create \
   --security-type TrustedLaunch
 ```
 
-> Use uma senha segura no seu ambiente. A senha acima está apenas como exemplo para laboratório. {: .prompt-warning }
+> Use uma senha segura no seu ambiente. A senha acima está apenas como exemplo para laboratório. 
+{: .prompt-warning }
 
 Depois de criada, acesse a VM via RDP ou Bastion e valide:
 
@@ -1356,7 +1357,7 @@ Get-WindowsFeature Web-Server
 Get-TimeZone
 ```
 
-![Azure Image Builder - VM Windows validada](assets/img/008/018-validate-windows-vm.png){: .shadow .rounded-10 }
+###![Azure Image Builder - VM Windows validada](assets/img/008/018-validate-windows-vm.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -1385,7 +1386,7 @@ which vim
 systemctl status walinuxagent --no-pager
 ```
 
-![Azure Image Builder - VM Ubuntu validada](assets/img/008/019-validate-ubuntu-vm.png){: .shadow .rounded-10 }
+###![Azure Image Builder - VM Ubuntu validada](assets/img/008/019-validate-ubuntu-vm.png){: .shadow .rounded-10 }###
 
 ---
 
@@ -1414,7 +1415,7 @@ which vim
 systemctl status walinuxagent --no-pager
 ```
 
-![Azure Image Builder - VM Debian validada](assets/img/008/020-validate-debian-vm.png){: .shadow .rounded-10 }
+###![Azure Image Builder - VM Debian validada](assets/img/008/020-validate-debian-vm.png){: .shadow .rounded-10 }###
 
 ---
 
