@@ -150,15 +150,10 @@ Para manter um padrão mais próximo do **Cloud Adoption Framework**, vou usar n
 
 Antes de iniciar, vamos considerar alguns pré-requisitos:
 
-* Uma assinatura Azure ativa;
-* Permissão de **Owner** ou **User Access Administrator** para criar atribuições de RBAC;
-* Permissão para criar Resource Groups, VNet, Managed Identity e Compute Gallery;
-* Azure Cloud Shell habilitado;
-* Azure CLI disponível;
+* Permissão de **Owner** para criar Resource Groups, VNet, Managed Identity, Compute Gallery e Custom RBAC;
 * Região com suporte ao Azure VM Image Builder;
 * Cotas disponíveis para criação temporária de recursos de build;
 * Nenhuma Azure Policy bloqueando recursos temporários, como:
-
   * Virtual Machine;
   * Network Interface;
   * Disk;
@@ -212,37 +207,6 @@ SKU: 13-gen2
 Version: latest
 ```
 
-> Em ambiente real, eu recomendo validar a disponibilidade da imagem na região antes de iniciar o build. Nem toda SKU aparece da mesma forma em todas as regiões ou assinaturas. 
-{: .prompt-tip }
-
-Para validar pelo Cloud Shell:
-
-```bash
-az vm image list-skus \
-  --location westus2 \
-  --publisher MicrosoftWindowsServer \
-  --offer WindowsServer \
-  --output table
-```
-
-```bash
-az vm image list \
-  --all \
-  --location westus2 \
-  --publisher Canonical \
-  --offer ubuntu-24_04-lts \
-  --output table
-```
-
-```bash
-az vm image list \
-  --all \
-  --location westus2 \
-  --publisher Debian \
-  --offer debian-13 \
-  --output table
-```
-
 ---
 
 ## Passo 1 — Registrar os providers necessários
@@ -261,7 +225,10 @@ az provider register --namespace Microsoft.ContainerInstance
 az provider register --namespace Microsoft.ManagedIdentity
 ```
 
-Depois, valide:
+![azure-image-builder](assets/img/008/002-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
+
+Em seguida valide se os providers foram registrados corretamente:
 
 ```bash
 az provider show --namespace Microsoft.VirtualMachineImages --query registrationState -o tsv
@@ -270,11 +237,10 @@ az provider show --namespace Microsoft.Network --query registrationState -o tsv
 az provider show --namespace Microsoft.ContainerInstance --query registrationState -o tsv
 ```
 
-O retorno esperado é:
+![azure-image-builder](assets/img/008/003-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
-```text
-Registered
-```
+O retorno esperado é **Registered**
 
 > Se algum provider ainda aparecer como `Registering`, aguarde alguns minutos e valide novamente. Essa etapa é simples, mas é uma das primeiras coisas que podem causar erro se for esquecida. 
 {: .prompt-info }
@@ -291,9 +257,11 @@ Pelo portal:
 2. Pesquise por **Resource groups**;
 3. Clique em **Create**;
 4. Informe:
-
-   * Subscription: sua assinatura;
-   * Resource group: `rg-aib-lab-wus2-001`;
+   * Subscription: Informe a subscription que será utilizada para a geração das imagens e alocação dos demais recursos;
+   * Resource group: 
+   ```text
+   rg-aib-lab-wus2-001
+   ```
    * Region: `West US 2`;
 5. Clique em **Review + Create**;
 6. Clique em **Create**.
