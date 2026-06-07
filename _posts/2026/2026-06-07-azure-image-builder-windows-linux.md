@@ -17,15 +17,15 @@ Seguimos evoluindo e agora para o próximo nível o tema será **Golden Images**
 E isso funciona muito bem para laboratório, estudo, testes rápidos e até mesmo a padronização de grandes empresas, mas quando começamos a falar de ambiente corporativo de alto padrão, governança, segurança, atualização recorrente e escala, esse modelo começa a ficar um pouco limitado por ser muito manual.
 
 Agora imagine o seguinte cenário:
-* Toda VM Windows precisa nascer com alguns pacotes básicos;
-* Toda VM Linux precisa nascer atualizada, com timezone correto e ferramentas mínimas;
-* Algumas imagens precisam ter agentes corporativos;
-* As imagens precisam ser versionadas;
-* O time precisa conseguir criar novas VMs sempre a partir de uma base padronizada.
+1. Toda VM Windows precisa nascer com alguns pacotes básicos;
+2. Toda VM Linux precisa nascer atualizada, com timezone correto e ferramentas mínimas;
+3. Algumas imagens precisam ter agentes corporativos;
+4. As imagens precisam ser versionadas;
+5. O time precisa conseguir criar novas VMs sempre a partir de uma base padronizada.
 
 É um tema sensivel e trabalhoso, mas é exatamente aqui que entra o **Azure Image Builder**.
 
-Neste artigo construiremos juntos na prática uma estrutura de imagens customizadas no Azure usando o Azure Image Builder, definiremos onde ficarão todas as Golden Imagens dentro do Azure Compute Gallery. Focaremos principalmente nos S.Os vai utilizados em todo o mundo:
+**Neste artigo construiremos juntos na prática uma estrutura de imagens customizadas no Azure usando o Azure Image Builder, definiremos onde ficarão todas as Golden Imagens dentro do Azure Compute Gallery. Focaremos principalmente nos S.Os vai utilizados em todo o mundo:**
 * Windows Server 2022;
 * Windows Server 2025;
 * Ubuntu 24.04 LTS;
@@ -36,21 +36,15 @@ Neste artigo construiremos juntos na prática uma estrutura de imagens customiza
 
 ---
 
-## O que é o Azure VM Image Builder?
+## Mas antes de começarmos, o que é e pra que serve o Azure VM Image Builder?
 
-O **Azure VM Image Builder** é um serviço do Azure que permite automatizar a criação de imagens customizadas de máquinas virtuais.
+O **Azure VM Image Builder** é um serviço do Azure que permite automatizar a criação de imagens customizadas de máquinas virtuais. Na prática ele pega uma imagem base e executa as customizações de forma automatizada e em seguida publica o resultado em algum destino, armazenando em:
 
-Na prática, ele pega uma imagem base, executa customizações e publica o resultado em algum destino, como:
+1. Managed Image; ou
+2. VHD; ou
+3. Azure Compute Gallery.
 
-* Managed Image;
-* VHD;
-* Azure Compute Gallery.
-
-Neste artigo, vamos usar o destino mais interessante para ambientes organizados: **Azure Compute Gallery**.
-
-Por quê?
-
-Porque a Azure Compute Gallery permite:
+Neste artigo decidi focar somente no **Azure Compute Gallery**, simplesmente porque a Azure Compute Gallery permite:
 
 * Criar definições de imagem;
 * Versionar imagens;
@@ -62,7 +56,7 @@ Porque a Azure Compute Gallery permite:
 De forma bem resumida, o fluxo fica assim:
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[Imagem base do Azure Marketplace] --> B[Azure VM Image Builder]
     B --> C[Build VM temporária]
     C --> D[Customizações]
@@ -71,6 +65,32 @@ flowchart LR
     F --> G[Image Definition]
     G --> H[Image Version]
     H --> I[Nova VM criada a partir da imagem customizada]
+```
+
+```mermaid
+flowchart TB
+    A["Matriz de Imagens<br/>Azure Image Builder"]
+
+    A --> W["Windows Server"]
+    A --> L["Linux"]
+
+    W --> W22["Windows Server 2022<br/>imgdef-winsrv2022-g2"]
+    W --> W25["Windows Server 2025<br/>imgdef-winsrv2025-g2"]
+
+    L --> U24["Ubuntu 24.04<br/>imgdef-ubuntu2404-g2"]
+    L --> D13["Debian 13<br/>imgdef-debian13-g2"]
+
+    W22 --> C1["Customizacao Windows"]
+    W25 --> C1
+
+    U24 --> C2["Customizacao Linux"]
+    D13 --> C2
+
+    C1 --> G["Azure Compute Gallery"]
+    C2 --> G
+
+    G --> V["Versoes"]
+    V --> VM["VMs Padronizadas"]
 ```
 
 ---
@@ -86,13 +106,29 @@ Neste laboratório vamos criar quatro imagens customizadas:
 | Ubuntu 24.04 LTS    | Ubuntu 24.04 LTS Server Gen2                  | Azure Compute Gallery |
 | Debian 13           | Debian 13 Gen2                                | Azure Compute Gallery |
 
-> Um ponto importante: apesar da imagem base ser Azure Edition no caso do Windows Server, a nomenclatura da nossa imagem customizada não precisa carregar “azureedition” no nome. Ela será uma imagem corporativa/base criada por nós, a partir de uma imagem oficial do Azure Marketplace. {: .prompt-tip }
-
 ---
 
 ## Arquitetura do laboratório
 
 A arquitetura final do laboratório será parecida com esta:
+
+```mermaid
+flowchart LR
+    A["Resource Group"] --> B["VNet Dedicada"]
+    B --> C["Subnet Build"]
+    B --> D["Subnet ACI"]
+
+    A --> E["Managed Identity"]
+    E --> F["RBAC"]
+
+    A --> G["Azure Compute Gallery"]
+    G --> H["Image Definitions"]
+
+    F --> I["Ambiente Pronto"]
+    C --> I
+    D --> I
+    H --> I
+```
 
 ```mermaid
 flowchart TB
@@ -145,7 +181,8 @@ Para manter um padrão mais próximo do **Cloud Adoption Framework**, vou usar n
 | Image Definition Ubuntu 24.04 | `imgdef-ubuntu2404-g2`       |
 | Image Definition Debian 13    | `imgdef-debian13-g2`         |
 
-> A Azure Compute Gallery não aceita hífen em todos os campos da mesma forma que outros recursos, por isso o nome da galeria está usando underline. Esse tipo de detalhe parece pequeno, mas evita erro bobo durante o laboratório. {: .prompt-info }
+> A Azure Compute Gallery não aceita hífen em todos os campos da mesma forma que outros recursos, por isso o nome da galeria está usando underline. Esse tipo de detalhe parece pequeno, mas evita erro bobo durante o laboratório. 
+{: .prompt-info }
 
 ---
 
@@ -170,7 +207,8 @@ Antes de iniciar, vamos considerar alguns pré-requisitos:
   * Network Security Group;
   * Private Endpoint, dependendo da topologia.
 
-> O Azure Image Builder cria recursos temporários durante o build. Então, se existir uma Azure Policy muito restritiva permitindo apenas alguns tipos de recursos, o build pode falhar mesmo que o template esteja correto. {: .prompt-warning }
+> O Azure Image Builder cria recursos temporários durante o build. Então, se existir uma Azure Policy muito restritiva permitindo apenas alguns tipos de recursos, o build pode falhar mesmo que o template esteja correto. 
+{: .prompt-warning }
 
 ---
 
@@ -214,7 +252,8 @@ SKU: 13-gen2
 Version: latest
 ```
 
-> Em ambiente real, eu recomendo validar a disponibilidade da imagem na região antes de iniciar o build. Nem toda SKU aparece da mesma forma em todas as regiões ou assinaturas. {: .prompt-tip }
+> Em ambiente real, eu recomendo validar a disponibilidade da imagem na região antes de iniciar o build. Nem toda SKU aparece da mesma forma em todas as regiões ou assinaturas. 
+{: .prompt-tip }
 
 Para validar pelo Cloud Shell:
 
@@ -246,36 +285,7 @@ az vm image list \
 
 ---
 
-## Passo 1 — Criar o Resource Group
-
-Vamos começar criando o Resource Group do laboratório.
-
-Pelo portal:
-
-1. Acesse o **Azure Portal**;
-2. Pesquise por **Resource groups**;
-3. Clique em **Create**;
-4. Informe:
-
-   * Subscription: sua assinatura;
-   * Resource group: `rg-aib-lab-wus2-001`;
-   * Region: `West US 2`;
-5. Clique em **Review + Create**;
-6. Clique em **Create**.
-
-
-
-Ou pelo Cloud Shell:
-
-```bash
-az group create \
-  --name rg-aib-lab-wus2-001 \
-  --location westus2
-```
-
----
-
-## Passo 2 — Registrar os providers necessários
+## Passo 1 — Registrar os providers necessários
 
 Antes de usar o Azure Image Builder, precisamos garantir que alguns providers estejam registrados na assinatura.
 
@@ -306,9 +316,27 @@ O retorno esperado é:
 Registered
 ```
 
-> Se algum provider ainda aparecer como `Registering`, aguarde alguns minutos e valide novamente. Essa etapa é simples, mas é uma das primeiras coisas que podem causar erro se for esquecida. {: .prompt-info }
+> Se algum provider ainda aparecer como `Registering`, aguarde alguns minutos e valide novamente. Essa etapa é simples, mas é uma das primeiras coisas que podem causar erro se for esquecida. 
+{: .prompt-info }
 
+---
 
+## Passo 2 — Criar o Resource Group
+
+Vamos começar criando o Resource Group do laboratório.
+
+Pelo portal:
+
+1. Acesse o **Azure Portal**;
+2. Pesquise por **Resource groups**;
+3. Clique em **Create**;
+4. Informe:
+
+   * Subscription: sua assinatura;
+   * Resource group: `rg-aib-lab-wus2-001`;
+   * Region: `West US 2`;
+5. Clique em **Review + Create**;
+6. Clique em **Create**.
 
 ---
 
@@ -323,7 +351,6 @@ Neste exemplo, teremos duas subnets:
 | `snet-aib-build-wus2-001` | Subnet onde a VM temporária de build será criada                        |
 | `snet-aib-aci-wus2-001`   | Subnet reservada para o Azure Container Instance usado no build isolado |
 
-Pelo portal:
 
 1. Pesquise por **Virtual networks**;
 2. Clique em **Create**;
@@ -342,33 +369,13 @@ Pelo portal:
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
 
-
-
-Ou pelo Cloud Shell:
-
-```bash
-az network vnet create \
-  --resource-group rg-aib-lab-wus2-001 \
-  --name vnet-aib-lab-wus2-001 \
-  --location westus2 \
-  --address-prefix 10.80.0.0/16 \
-  --subnet-name snet-aib-build-wus2-001 \
-  --subnet-prefixes 10.80.1.0/24
-```
-
-```bash
-az network vnet subnet create \
-  --resource-group rg-aib-lab-wus2-001 \
-  --vnet-name vnet-aib-lab-wus2-001 \
-  --name snet-aib-aci-wus2-001 \
-  --address-prefixes 10.80.2.0/24
-```
-
 ---
 
 ## Passo 4 — Ajustar a subnet do ACI
 
 Para o cenário com build isolado e subnet dedicada para o Azure Container Instance, precisamos delegar a subnet do ACI.
+
+Para esse passo, vamos utilizar o Cloud Shell:
 
 ```bash
 az network vnet subnet update \
@@ -399,7 +406,8 @@ echo $BUILD_SUBNET_ID
 echo $ACI_SUBNET_ID
 ```
 
-> Guarde esses valores. Eles serão usados no `vmProfile` dos templates do Azure Image Builder. {: .prompt-tip }
+> Guarde esses valores. Eles serão usados no `vmProfile` dos templates do Azure Image Builder. 
+{: .prompt-tip }
 
 ---
 
@@ -421,16 +429,6 @@ Pelo portal:
 4. Clique em **Review + Create**;
 5. Clique em **Create**.
 
-
-
-Ou pelo Cloud Shell:
-
-```bash
-az identity create \
-  --resource-group rg-aib-lab-wus2-001 \
-  --name id-aib-lab-wus2-001 \
-  --location westus2
-```
 
 Agora vamos capturar os IDs da identidade:
 
@@ -472,16 +470,6 @@ Pelo portal:
 5. Clique em **Create**.
 
 
-
-Ou pelo Cloud Shell:
-
-```bash
-az sig create \
-  --resource-group rg-aib-lab-wus2-001 \
-  --gallery-name gal_aib_lab_wus2_001 \
-  --location westus2
-```
-
 ---
 
 ## Passo 7 — Criar as Image Definitions
@@ -496,7 +484,7 @@ A Azure Compute Gallery trabalha com alguns conceitos importantes:
 | Generalized      | Imagem preparada para criar novas VMs                        |
 | Specialized      | Imagem ainda ligada à identidade/configuração original da VM |
 
-Neste artigo vamos trabalhar com imagens **Generalized**, que é o cenário mais comum para criação de novas VMs padronizadas.
+Darei preferencia em trabalhar com imagens **Generalized**, que é o cenário mais comum para criação de novas VMs padronizadas.
 
 ### Windows Server 2022
 
@@ -564,7 +552,8 @@ az sig image-definition create \
 
 
 
-> Atenção aqui: o Hyper-V Generation da definição da imagem precisa bater com a geração da imagem base. Se você criar uma definição Gen1 e tentar publicar uma imagem Gen2, o processo vai falhar. {: .prompt-warning }
+> O Hyper-V Generation da definição da imagem precisa bater com a geração da imagem base. Se você criar uma definição Gen1 e tentar publicar uma imagem Gen2, o processo vai falhar. 
+{: .prompt-warning }
 
 ---
 
