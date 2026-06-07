@@ -56,18 +56,6 @@ Neste artigo decidi focar somente no **Azure Compute Gallery**, simplesmente por
 De forma bem resumida, o fluxo fica assim:
 
 ```mermaid
-flowchart TD
-    A[Imagem base do Azure Marketplace] --> B[Azure VM Image Builder]
-    B --> C[Build VM temporária]
-    C --> D[Customizações]
-    D --> E[Generalização da imagem]
-    E --> F[Azure Compute Gallery]
-    F --> G[Image Definition]
-    G --> H[Image Version]
-    H --> I[Nova VM criada a partir da imagem customizada]
-```
-
-```mermaid
 flowchart TB
     A["Matriz de Imagens<br/>Azure Image Builder"]
 
@@ -80,7 +68,7 @@ flowchart TB
     L --> U24["Ubuntu 24.04<br/>imgdef-ubuntu2404-g2"]
     L --> D13["Debian 13<br/>imgdef-debian13-g2"]
 
-    W22 --> C1["Customizacao Windows"]
+    W22 --> C1["Customização Windows"]
     W25 --> C1
 
     U24 --> C2["Customizacao Linux"]
@@ -89,7 +77,7 @@ flowchart TB
     C1 --> G["Azure Compute Gallery"]
     C2 --> G
 
-    G --> V["Versoes"]
+    G --> V["Versões"]
     V --> VM["VMs Padronizadas"]
 ```
 
@@ -113,52 +101,24 @@ Neste laboratório vamos criar quatro imagens customizadas:
 A arquitetura final do laboratório será parecida com esta:
 
 ```mermaid
-flowchart LR
-    A["Resource Group"] --> B["VNet Dedicada"]
-    B --> C["Subnet Build"]
-    B --> D["Subnet ACI"]
-
-    A --> E["Managed Identity"]
-    E --> F["RBAC"]
-
-    A --> G["Azure Compute Gallery"]
-    G --> H["Image Definitions"]
-
-    F --> I["Ambiente Pronto"]
-    C --> I
-    D --> I
-    H --> I
-```
-
-```mermaid
 flowchart TB
-    subgraph Azure["Microsoft Azure"]
-        subgraph RG["rg-aib-lab-wus2-001"]
-            VNET["vnet-aib-lab-wus2-001"]
-            SNETBUILD["snet-aib-build-wus2-001"]
-            SNETACI["snet-aib-aci-wus2-001"]
-            ID["id-aib-lab-wus2-001"]
-            GAL["gal_aib_lab_wus2_001"]
-            IMG1["imgdef-winsrv2022-g2"]
-            IMG2["imgdef-winsrv2025-g2"]
-            IMG3["imgdef-ubuntu2404-g2"]
-            IMG4["imgdef-debian13-g2"]
-        end
+    MG["Management Group"] --> CR["Custom Role<br/>AIB Permissions"]
 
-        AIB["Azure VM Image Builder"]
-        ACG["Azure Compute Gallery"]
-    end
+    RG["Resource Group"] --> VNET["VNet Dedicada"]
+    VNET --> SB["Subnet Build"]
+    VNET --> SA["Subnet ACI"]
 
-    VNET --> SNETBUILD
-    VNET --> SNETACI
-    ID --> AIB
-    AIB --> SNETBUILD
-    AIB --> SNETACI
-    AIB --> ACG
-    GAL --> IMG1
-    GAL --> IMG2
-    GAL --> IMG3
-    GAL --> IMG4
+    RG --> MI["Managed Identity"]
+    CR --> RA["Role Assignment"]
+    MI --> RA
+
+    RG --> ACG["Azure Compute Gallery"]
+    ACG --> IDF["Image Definitions"]
+
+    RA --> READY["Ambiente Pronto"]
+    SB --> READY
+    SA --> READY
+    IDF --> READY
 ```
 
 ---
@@ -570,7 +530,7 @@ O Azure Image Builder precisa conseguir:
 * Fazer join na subnet;
 * Interagir com recursos temporários do processo de build.
 
-Para isso, vamos criar uma role customizada.
+Para isso vamos criar uma role customizada diretamente no portal
 
 Crie um arquivo chamado:
 
