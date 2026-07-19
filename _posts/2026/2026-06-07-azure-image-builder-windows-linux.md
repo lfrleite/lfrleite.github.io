@@ -381,22 +381,27 @@ echo $ACI_SUBNET_ID
 
 O Azure Image Builder precisa de uma identidade para conseguir escrever a imagem final na Azure Compute Gallery e também interagir com alguns recursos necessários durante o build.
 
-Vamos criar uma **User Assigned Managed Identity**.
+Criaremos uma **User Assigned Managed Identity**:
 
-Pelo portal:
+1. Pesquise por **Managed Identities** e clique em **Create**:
+![azure-image-builder](assets/img/008/008-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
-1. Pesquise por **Managed Identities**;
-2. Clique em **Create**;
-3. Informe:
+2. Informe:
 
    * Resource group: `rg-aib-lab-wus2-001`;
    * Region: `West US 2`;
-   * Name: `id-aib-lab-wus2-001`;
-4. Clique em **Review + Create**;
+   * Name: 
+   ```text
+   id-aib-lab-wus2-001
+   ```
+3. Não será necessário selecionar Isolation Scope, basta clicar em **Next**;
+4. Coloque as tags padrões elegíveis na governança conforme a sua necessidade;
 5. Clique em **Create**.
+![azure-image-builder](assets/img/008/009-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
-
-Agora vamos capturar os IDs da identidade:
+Agora vamos capturar os IDs da identidade, pois iremos utiliza-lo nos próximos passos:
 
 ```bash
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
@@ -416,6 +421,9 @@ IDENTITY_CLIENT_ID=$(az identity show \
 echo $IDENTITY_ID
 echo $IDENTITY_CLIENT_ID
 ```
+
+![azure-image-builder](assets/img/008/010-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
