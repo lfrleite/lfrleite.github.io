@@ -679,7 +679,7 @@ az sig image-definition create \
 
 ## Passo 8 — Criar a role customizada para o Azure Image Builder
 
-Agora vem uma das partes mais importantes do laboratório: permissões.
+Agora vem uma das partes mais importantes do laboratório: **PERMISSÕES** 
 
 O Azure Image Builder precisa conseguir:
 
