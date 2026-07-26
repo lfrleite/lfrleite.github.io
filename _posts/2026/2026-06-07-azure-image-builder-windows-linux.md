@@ -558,7 +558,7 @@ Pelo portal:
    * Region: `West US 2`;
    * Description: `Esta galeria de imagens será utilizada para criações padronizadas exclusivas ao Azure Image Builder` - *A descrição é opcional, mas altamente recomendável*
 
-![azure-image-builder](assets/img/008/010-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+![azure-image-builder](assets/img/008/011-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
 4. Na aba **Sharing** manteremos o metodo via RBAC, pois não iremos produzir uma imagem a ser compartilhada publicamente para comunidade;
@@ -566,6 +566,8 @@ Pelo portal:
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
 
+![azure-image-builder](assets/img/008/012-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 ---
 
