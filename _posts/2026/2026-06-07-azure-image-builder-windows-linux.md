@@ -40,8 +40,8 @@ Agora imagine o seguinte cenário:
 
 O **Azure VM Image Builder** é um serviço do Azure que permite automatizar a criação de imagens customizadas de máquinas virtuais. Na prática ele pega uma imagem base e executa as customizações de forma automatizada e em seguida publica o resultado em algum destino, armazenando em:
 
-1. Managed Image; ou
-2. VHD; ou
+1. Managed Image;
+2. VHD;
 3. Azure Compute Gallery.
 
 Neste artigo decidi focar somente no **Azure Compute Gallery**, simplesmente porque a Azure Compute Gallery permite:
@@ -62,22 +62,22 @@ flowchart TB
     A --> W["Windows Server"]
     A --> L["Linux"]
 
-    W --> W22["Windows Server 2022<br/>imgdef-winsrv2022-g2"]
-    W --> W25["Windows Server 2025<br/>imgdef-winsrv2025-g2"]
+    W --> W22["Windows Server 2022"]
+    W --> W25["Windows Server 2025"]
 
-    L --> U24["Ubuntu 24.04<br/>imgdef-ubuntu2404-g2"]
-    L --> D13["Debian 13<br/>imgdef-debian13-g2"]
+    L --> U24["Ubuntu 24.04"]
+    L --> D13["Debian 13"]
 
-    W22 --> C1["Customização Windows"]
+    W22 --> C1["Customizações Windows"]
     W25 --> C1
 
-    U24 --> C2["Customizacao Linux"]
+    U24 --> C2["Customizações Linux"]
     D13 --> C2
 
     C1 --> G["Azure Compute Gallery"]
     C2 --> G
 
-    G --> V["Versões"]
+    G --> V["Versões das Imagens"]
     V --> VM["VMs Padronizadas"]
 ```
 
@@ -94,31 +94,99 @@ Neste laboratório vamos criar quatro imagens customizadas:
 | Ubuntu 24.04 LTS    | Ubuntu 24.04 LTS Server Gen2                  | Azure Compute Gallery |
 | Debian 13           | Debian 13 Gen2                                | Azure Compute Gallery |
 
----
+Todas as definições serão criadas como:
+
+```text
+Generalized
+Generation 2
+TrustedLaunchSupported
+```
+
+Uma imagem **Generalized** não mantém informações específicas da máquina utilizada durante a criação, como nome do computador, contas locais exclusivas e determinados identificadores do sistema.
+
+Isso permite que a mesma versão seja utilizada para criar várias VMs independentes.
+
+Uma imagem **Specialized**, por outro lado, preserva o estado e diversas configurações da máquina de origem. Esse modelo pode ser útil em cenários específicos, mas não será utilizado neste laboratório.
+
 
 ## Arquitetura do laboratório
 
 A arquitetura final do laboratório será parecida com esta:
 
+**GOVERNANÇA E PERMISSÕES**
 ```mermaid
 flowchart TB
-    MG["Management Group"] --> CR["Custom Role<br/>AIB Permissions"]
+    TENANT["Microsoft Entra Tenant"]
+    ROOT["Tenant Root Group"]
+    MG["Management Group<br/>Plataforma / Landing Zones"]
 
-    RG["Resource Group"] --> VNET["VNet Dedicada"]
-    VNET --> SB["Subnet Build"]
-    VNET --> SA["Subnet ACI"]
+    POLICY["Azure Policy Assignment<br/>Guardrails corporativos"]
+    ROLEDEF["Custom Role Definition<br/>AIB Permissions<br/>Assignable Scope: Management Group"]
 
-    RG --> MI["Managed Identity"]
-    CR --> RA["Role Assignment"]
-    MI --> RA
+    SUBPRD["Subscription<br/>Produção"]
+    SUBHML["Subscription<br/>Homologação"]
+    SUBIMG["Subscription de Imagens<br/>Image Factory / Shared Services"]
 
-    RG --> ACG["Azure Compute Gallery"]
-    ACG --> IDF["Image Definitions"]
+    TENANT --> ROOT
+    ROOT --> MG
 
-    RA --> READY["Ambiente Pronto"]
-    SB --> READY
-    SA --> READY
-    IDF --> READY
+    MG --> SUBPRD
+    MG --> SUBHML
+    MG --> SUBIMG
+
+    POLICY -. "Atribuição no Management Group" .-> MG
+    ROLEDEF -. "Disponível para atribuição<br/>nos escopos descendentes" .-> MG
+```
+---
+**REDE E PROCESSO DE BUILD**
+```mermaid
+flowchart LR
+    PIP["Public IP Standard"] --> NAT["NAT Gateway<br/>Saída explícita"]
+
+    subgraph VNET["VNet dedicada"]
+        direction TB
+
+        SB["Subnet de Build<br/>VM temporária"]
+        SA["Subnet de ACI<br/>Delegada"]
+    end
+
+    NAT --> SB
+    NAT --> SA
+
+    AIB["Azure VM Image Builder"] --> SRG["Staging Resource Group<br/>Recursos temporários"]
+
+    SRG --> VM["VM temporária de Build"]
+    SRG --> ACI["Azure Container Instance<br/>Build isolado"]
+
+    SB --> VM
+    SA --> ACI
+
+    VM --> CUSTOM["Customizações<br/>Atualizações e configurações"]
+    ACI --> CUSTOM
+
+    CUSTOM --> VALIDATE["Validações da imagem"]
+    VALIDATE --> OUTPUT["Artefato de imagem<br/>Pronto para publicação"]
+```
+---
+**PUBLICAÇÃO E VALIDAÇÃO DA IMAGEM CRIADA**
+```mermaid
+flowchart LR
+    OUTPUT["Artefato produzido<br/>pelo Image Builder"]
+
+    ACG["Azure Compute Gallery"] --> IDF["Image Definition<br/>Windows ou Linux"]
+
+    OUTPUT --> VERSION["Image Version<br/>1.0.0, 1.0.1..."]
+    IDF --> VERSION
+
+    VERSION --> TESTVM["VM de validação<br/>Sem IP público"]
+    TESTNET["Subnet de Teste"] --> TESTVM
+
+    TESTVM --> TESTS["Testes de boot, agente,<br/>rede e customizações"]
+
+    TESTS -->|Aprovada| READY["Imagem homologada<br/>Pronta para consumo"]
+    TESTS -->|Reprovada| FIX["Ajustar template<br/>e executar novo build"]
+
+    FIX --> OUTPUT
 ```
 
 ---
@@ -133,15 +201,20 @@ Para manter um padrão mais próximo do **Cloud Adoption Framework**, vou usar n
 | Virtual Network               | `vnet-aib-lab-wus2-001`      |
 | Subnet para Build VM          | `snet-aib-build-wus2-001`    |
 | Subnet para ACI               | `snet-aib-aci-wus2-001`      |
+| Public IP do NAT Gateway      | `pip-nat-aib-lab-wus2-001`   |
+| NAT Gateway                   | `nat-aib-lab-wus2-001`       |
 | Managed Identity              | `id-aib-lab-wus2-001`        |
 | Azure Compute Gallery         | `gal_aib_lab_wus2_001`       |
 | Custom Role                   | `role-aib-lab-image-builder` |
-| Image Definition Windows 2022 | `imgdef-winsrv2022-g2`       |
-| Image Definition Windows 2025 | `imgdef-winsrv2025-g2`       |
-| Image Definition Ubuntu 24.04 | `imgdef-ubuntu2404-g2`       |
-| Image Definition Debian 13    | `imgdef-debian13-g2`         |
+| Image Definition Windows 2022 | `imgdef-winsrv2022`       |
+| Image Definition Windows 2025 | `imgdef-winsrv2025`       |
+| Image Definition Ubuntu 24.04 | `imgdef-ubuntu2404`       |
+| Image Definition Debian 13    | `imgdef-debian13`         |
 
 > A Azure Compute Gallery não aceita hífen em todos os campos da mesma forma que outros recursos, por isso o nome da galeria está usando underline. Esse tipo de detalhe parece pequeno, mas evita erro bobo durante o laboratório. 
+{: .prompt-info }
+
+> Utilizaremos um NAT Gateway para obter acesso externo a internet, pois desde 31 de Março de 2026 a Microsoft anunciou que os recursos não terão saída para Internet diretamente pelo IP público da VM. 
 {: .prompt-info }
 
 ---
@@ -288,7 +361,6 @@ Neste exemplo iremos utilizar 2 subnets:
 1. Pesquise por **Virtual networks**;
 2. Clique em **Create**;
 3. Informe:
-
    * Resource group: `rg-aib-lab-wus2-001`;
    * Name:
    ```text
@@ -331,7 +403,46 @@ Neste exemplo iremos utilizar 2 subnets:
 
 ---
 
-## Passo 4 — Ajustar a subnet do ACI
+## Passo 4 - Criando o NAT Gateway
+
+Como mencionei anteriormente, desde **31 de março de 2026** novas redes virtuais e subnets podem ser criadas sem o antigo acesso de saída padrão.
+
+Como o processo de build precisará acessar repositórios de atualização, endpoints do Azure e fontes de pacotes, configuraremos uma saída explícita por meio de um NAT Gateway.
+
+1. Pesquise por **NAT Gateways**;
+2. Clique em **Create**;
+3. Informe:
+   * Resource group: `rg-aib-lab-wus2-001`;
+   * Name:
+   ```text
+   nat-aib-lab-wus2-001
+   ```
+   * Region: `West US 2`;
+   * SKU: Selecione a opção `Standard`
+4. Em **Outbound IP**, configure:
+   * Clique em **Add public IP addresses or prefixes**;
+   * Clique em **Create a public IP address**;
+   * Name:
+   ```text
+   pip-nat-aib-lab-wus2-001
+   ```
+   * Clique em **OK** e em seguida em **SAVE**
+  
+![azure-image-builder](assets/img/008/013-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
+
+5. Em **Networking**:
+   * Virtual Network: selecione `vnet-aib-lab-wus2-001`;
+   * Select specific subnets: selecione `snet-aib-build-wus2-001` e `snet-aib-aci-wus2-001`
+6. Clique em **Review + Create**;
+7. Clique em **Create**.
+
+![azure-image-builder](assets/img/008/014-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
+
+---
+
+## Passo 5 — Ajustar a subnet do ACI
 
 Para o cenário com build isolado e subnet dedicada para o Azure Container Instance, precisamos delegar a subnet do ACI.
 
@@ -344,7 +455,6 @@ az network vnet subnet update \
   --name snet-aib-aci-wus2-001 \
   --delegations Microsoft.ContainerInstance/containerGroups
 ```
-
 ![azure-image-builder](assets/img/008/006-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
@@ -368,7 +478,6 @@ ACI_SUBNET_ID=$(az network vnet subnet show \
 echo $BUILD_SUBNET_ID
 echo $ACI_SUBNET_ID
 ```
-
 ![azure-image-builder](assets/img/008/007-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
@@ -384,6 +493,7 @@ O Azure Image Builder precisa de uma identidade para conseguir escrever a imagem
 Criaremos uma **User Assigned Managed Identity**:
 
 1. Pesquise por **Managed Identities** e clique em **Create**:
+
 ![azure-image-builder](assets/img/008/008-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
@@ -398,6 +508,7 @@ Criaremos uma **User Assigned Managed Identity**:
 3. Não será necessário selecionar Isolation Scope, basta clicar em **Next**;
 4. Coloque as tags padrões elegíveis na governança conforme a sua necessidade;
 5. Clique em **Create**.
+
 ![azure-image-builder](assets/img/008/009-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
@@ -429,24 +540,36 @@ echo $IDENTITY_CLIENT_ID
 
 ## Passo 6 — Criar a Azure Compute Gallery
 
-Agora vamos criar a galeria que receberá as imagens customizadas.
+Agora vamos criar o repositório que receberá as imagens customizadas.
+
+> Pule esta etapa caso você já tenha uma galeria criada. 
+{: .prompt-info }
 
 Pelo portal:
 
 1. Pesquise por **Azure Compute Galleries**;
 2. Clique em **Create**;
-3. Informe:
-
+3. Na aba **Basics** informe:
    * Resource group: `rg-aib-lab-wus2-001`;
-   * Name: `gal_aib_lab_wus2_001`;
+   * Name: 
+   ```text
+   gal_aib_lab_wus2_001
+   ```
    * Region: `West US 2`;
-4. Clique em **Review + Create**;
-5. Clique em **Create**.
+   * Description: `Esta galeria de imagens será utilizada para criações padronizadas exclusivas ao Azure Image Builder` - *A descrição é opcional, mas altamente recomendável*
+
+![azure-image-builder](assets/img/008/010-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
+
+4. Na aba **Sharing** manteremos o metodo via RBAC, pois não iremos produzir uma imagem a ser compartilhada publicamente para comunidade;
+5. Adicione as **Tags** conforme a governança da sua empresa;
+6. Clique em **Review + Create**;
+7. Clique em **Create**.
 
 
 ---
 
-## Passo 7 — Criar as Image Definitions
+## Passo 7 — Criando as Image Definitions
 
 A Azure Compute Gallery trabalha com alguns conceitos importantes:
 
@@ -458,7 +581,20 @@ A Azure Compute Gallery trabalha com alguns conceitos importantes:
 | Generalized      | Imagem preparada para criar novas VMs                        |
 | Specialized      | Imagem ainda ligada à identidade/configuração original da VM |
 
+As quatro definições serão criadas como:
+
+* `Generalized`;
+* Hyper-V Generation `V2`;
+* `TrustedLaunchSupported`.
+
+A definição `TrustedLaunchSupported` permite que a imagem seja utilizada tanto em VMs Gen2 padrão quanto em VMs configuradas com Trusted Launch.
+
+> A definição `TrustedLaunchSupported` permite que a imagem seja utilizada tanto em VMs Gen2 padrão quanto em VMs configuradas com Trusted Launch. 
+{: .prompt-tip }
+
 Darei preferencia em trabalhar com imagens **Generalized**, que é o cenário mais comum para criação de novas VMs padronizadas.
+
+**As atividades abaixo utilizaremos o Cloud Shell:**
 
 ### Windows Server 2022
 
@@ -466,15 +602,18 @@ Darei preferencia em trabalhar com imagens **Generalized**, que é o cenário ma
 az sig image-definition create \
   --resource-group rg-aib-lab-wus2-001 \
   --gallery-name gal_aib_lab_wus2_001 \
-  --gallery-image-definition imgdef-winsrv2022-g2 \
+  --gallery-image-definition imgdef-winsrv2022 \
   --publisher RuizSolutions \
   --offer base-windows \
-  --sku winsrv2022-g2 \
+  --sku winsrv2022 \
   --os-type Windows \
   --os-state Generalized \
   --hyper-v-generation V2 \
   --features SecurityType=TrustedLaunchSupported
 ```
+
+![azure-image-builder](assets/img/008/015-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 ### Windows Server 2025
 
@@ -482,15 +621,18 @@ az sig image-definition create \
 az sig image-definition create \
   --resource-group rg-aib-lab-wus2-001 \
   --gallery-name gal_aib_lab_wus2_001 \
-  --gallery-image-definition imgdef-winsrv2025-g2 \
+  --gallery-image-definition imgdef-winsrv2025 \
   --publisher RuizSolutions \
   --offer base-windows \
-  --sku winsrv2025-g2 \
+  --sku winsrv2025 \
   --os-type Windows \
   --os-state Generalized \
   --hyper-v-generation V2 \
   --features SecurityType=TrustedLaunchSupported
 ```
+
+![azure-image-builder](assets/img/008/016-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 ### Ubuntu 24.04
 
@@ -498,15 +640,18 @@ az sig image-definition create \
 az sig image-definition create \
   --resource-group rg-aib-lab-wus2-001 \
   --gallery-name gal_aib_lab_wus2_001 \
-  --gallery-image-definition imgdef-ubuntu2404-g2 \
+  --gallery-image-definition imgdef-ubuntu2404 \
   --publisher RuizSolutions \
   --offer base-linux \
-  --sku ubuntu2404-g2 \
+  --sku ubuntu2404 \
   --os-type Linux \
   --os-state Generalized \
   --hyper-v-generation V2 \
   --features SecurityType=TrustedLaunchSupported
 ```
+
+![azure-image-builder](assets/img/008/017-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 ### Debian 13
 
@@ -514,17 +659,18 @@ az sig image-definition create \
 az sig image-definition create \
   --resource-group rg-aib-lab-wus2-001 \
   --gallery-name gal_aib_lab_wus2_001 \
-  --gallery-image-definition imgdef-debian13-g2 \
+  --gallery-image-definition imgdef-debian13 \
   --publisher RuizSolutions \
   --offer base-linux \
-  --sku debian13-g2 \
+  --sku debian13 \
   --os-type Linux \
   --os-state Generalized \
   --hyper-v-generation V2 \
   --features SecurityType=TrustedLaunchSupported
 ```
 
-
+![azure-image-builder](assets/img/008/018-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
 
 > O Hyper-V Generation da definição da imagem precisa bater com a geração da imagem base. Se você criar uma definição Gen1 e tentar publicar uma imagem Gen2, o processo vai falhar. 
 {: .prompt-warning }
@@ -729,8 +875,8 @@ Conteúdo:
     "distribute": [
       {
         "type": "SharedImage",
-        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2022-g2",
-        "runOutputName": "runoutput-winsrv2022-g2",
+        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2022",
+        "runOutputName": "runoutput-winsrv2022",
         "artifactTags": {
           "source": "azure-image-builder",
           "os": "windows-server-2022",
@@ -768,7 +914,7 @@ Crie o Image Template:
 ```bash
 az resource create \
   --resource-group rg-aib-lab-wus2-001 \
-  --name aib-winsrv2022-g2 \
+  --name aib-winsrv2022 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --properties @aib-winsrv2022-template.json \
   --is-full-object
@@ -782,7 +928,7 @@ Agora execute o build:
 az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-winsrv2022-g2 \
+  --name aib-winsrv2022 \
   --action Run
 ```
 
@@ -793,7 +939,7 @@ az resource invoke-action \
 Durante o build, acesse:
 
 1. Resource Group `rg-aib-lab-wus2-001`;
-2. Procure pelo recurso `aib-winsrv2022-g2`;
+2. Procure pelo recurso `aib-winsrv2022`;
 3. Acesse o template;
 4. Valide o status da última execução.
 
@@ -803,7 +949,7 @@ Também é possível acompanhar pelo Cloud Shell:
 az resource show \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-winsrv2022-g2 \
+  --name aib-winsrv2022 \
   --query properties.lastRunStatus
 ```
 
@@ -829,7 +975,7 @@ Após o build ser concluído, acesse:
 
 1. **Azure Compute Gallery**;
 2. Galeria `gal_aib_lab_wus2_001`;
-3. Image definition `imgdef-winsrv2022-g2`;
+3. Image definition `imgdef-winsrv2022`;
 4. Clique em **Versions**.
 
 Você deverá visualizar uma versão criada automaticamente.
@@ -923,8 +1069,8 @@ Conteúdo:
     "distribute": [
       {
         "type": "SharedImage",
-        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2025-g2",
-        "runOutputName": "runoutput-winsrv2025-g2",
+        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2025",
+        "runOutputName": "runoutput-winsrv2025",
         "artifactTags": {
           "source": "azure-image-builder",
           "os": "windows-server-2025",
@@ -962,7 +1108,7 @@ Crie o template:
 ```bash
 az resource create \
   --resource-group rg-aib-lab-wus2-001 \
-  --name aib-winsrv2025-g2 \
+  --name aib-winsrv2025 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --properties @aib-winsrv2025-template.json \
   --is-full-object
@@ -974,7 +1120,7 @@ Execute o build:
 az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-winsrv2025-g2 \
+  --name aib-winsrv2025 \
   --action Run
 ```
 
@@ -1068,8 +1214,8 @@ Conteúdo:
     "distribute": [
       {
         "type": "SharedImage",
-        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-ubuntu2404-g2",
-        "runOutputName": "runoutput-ubuntu2404-g2",
+        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-ubuntu2404",
+        "runOutputName": "runoutput-ubuntu2404",
         "artifactTags": {
           "source": "azure-image-builder",
           "os": "ubuntu-24.04",
@@ -1107,7 +1253,7 @@ Crie o template:
 ```bash
 az resource create \
   --resource-group rg-aib-lab-wus2-001 \
-  --name aib-ubuntu2404-g2 \
+  --name aib-ubuntu2404 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --properties @aib-ubuntu2404-template.json \
   --is-full-object
@@ -1119,7 +1265,7 @@ Execute o build:
 az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-ubuntu2404-g2 \
+  --name aib-ubuntu2404 \
   --action Run
 ```
 
@@ -1211,8 +1357,8 @@ Conteúdo:
     "distribute": [
       {
         "type": "SharedImage",
-        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-debian13-g2",
-        "runOutputName": "runoutput-debian13-g2",
+        "galleryImageId": "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-debian13",
+        "runOutputName": "runoutput-debian13",
         "artifactTags": {
           "source": "azure-image-builder",
           "os": "debian-13",
@@ -1250,7 +1396,7 @@ Crie o template:
 ```bash
 az resource create \
   --resource-group rg-aib-lab-wus2-001 \
-  --name aib-debian13-g2 \
+  --name aib-debian13 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --properties @aib-debian13-template.json \
   --is-full-object
@@ -1262,7 +1408,7 @@ Execute o build:
 az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-debian13-g2 \
+  --name aib-debian13 \
   --action Run
 ```
 
@@ -1278,10 +1424,10 @@ Depois que todos os builds forem concluídos, acesse:
 2. `gal_aib_lab_wus2_001`;
 3. Valide cada Image Definition:
 
-   * `imgdef-winsrv2022-g2`;
-   * `imgdef-winsrv2025-g2`;
-   * `imgdef-ubuntu2404-g2`;
-   * `imgdef-debian13-g2`;
+   * `imgdef-winsrv2022`;
+   * `imgdef-winsrv2025`;
+   * `imgdef-ubuntu2404`;
+   * `imgdef-debian13`;
 4. Em cada uma, acesse **Versions**.
 
 Você deve ter uma versão publicada para cada imagem.
@@ -1301,7 +1447,7 @@ az vm create \
   --resource-group rg-aib-lab-wus2-001 \
   --name vm-test-winsrv2022-aib-001 \
   --location westus2 \
-  --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2022-g2/versions/latest" \
+  --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2022/versions/latest" \
   --admin-username azureuser \
   --admin-password "Troque@EssaSenha123456!" \
   --size Standard_D2s_v5 \
@@ -1332,7 +1478,7 @@ az vm create \
   --resource-group rg-aib-lab-wus2-001 \
   --name vm-test-ubuntu2404-aib-001 \
   --location westus2 \
-  --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-ubuntu2404-g2/versions/latest" \
+  --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-ubuntu2404/versions/latest" \
   --admin-username azureuser \
   --generate-ssh-keys \
   --size Standard_D2s_v5 \
@@ -1361,7 +1507,7 @@ az vm create \
   --resource-group rg-aib-lab-wus2-001 \
   --name vm-test-debian13-aib-001 \
   --location westus2 \
-  --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-debian13-g2/versions/latest" \
+  --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-debian13/versions/latest" \
   --admin-username azureuser \
   --generate-ssh-keys \
   --size Standard_D2s_v5 \
@@ -1485,7 +1631,7 @@ Se precisar acessar secrets durante o build, prefira Key Vault e Managed Identit
 Mantenha um histórico simples:
 
 ```text
-Imagem: imgdef-ubuntu2404-g2
+Imagem: imgdef-ubuntu2404
 Versão: 1.0.0
 Data: 07/06/2026
 Base: Canonical:ubuntu-24_04-lts:server:latest
@@ -1642,28 +1788,28 @@ Se quiser remover o laboratório depois, comece pelos Image Templates:
 az resource delete \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-winsrv2022-g2
+  --name aib-winsrv2022
 ```
 
 ```bash
 az resource delete \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-winsrv2025-g2
+  --name aib-winsrv2025
 ```
 
 ```bash
 az resource delete \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-ubuntu2404-g2
+  --name aib-ubuntu2404
 ```
 
 ```bash
 az resource delete \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
-  --name aib-debian13-g2
+  --name aib-debian13
 ```
 
 Depois, remova o Resource Group, se for realmente um laboratório:
