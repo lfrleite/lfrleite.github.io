@@ -616,6 +616,7 @@ az sig image-definition create \
 
 ![azure-image-builder](assets/img/008/015-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
+---
 
 ### Windows Server 2025
 
@@ -635,6 +636,7 @@ az sig image-definition create \
 
 ![azure-image-builder](assets/img/008/016-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
+---
 
 ### Ubuntu 24.04
 
@@ -654,6 +656,7 @@ az sig image-definition create \
 
 ![azure-image-builder](assets/img/008/017-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
+---
 
 ### Debian 13
 
@@ -679,9 +682,11 @@ az sig image-definition create \
 
 ---
 
-## Passo 8 — Criar a role customizada para o Azure Image Builder
+## Passo 8 — Criando uma ROLE customizada para o Azure Image Builder
 
 Agora vem uma das partes mais importantes do laboratório: **PERMISSÕES** 
+
+A Managed Identity será utilizada durante o build, mas ela não recebe acesso automático à VNet ou à Azure Compute Gallery.
 
 O Azure Image Builder precisa conseguir:
 
@@ -692,77 +697,34 @@ O Azure Image Builder precisa conseguir:
 * Fazer join na subnet;
 * Interagir com recursos temporários do processo de build.
 
-Para isso vamos criar uma role customizada diretamente no portal
 
-Crie um arquivo chamado:
+Para este laboratório não precisamos conceder Contributor à Managed Identity no Resource Group inteiro. Vamos criar uma Custom Role com somente as ações necessárias para o cenário utilizado aqui.
 
-```bash
-role-aib-lab-image-builder.json
+### Criando a Custom Role pelo Portal
+
+1. Acesse o **Management Group** que contém a Subscription de Imagens - No meu caso eu tenho apenas 1 subscriptions localizada em LABS - PRD;
+![azure-image-builder](assets/img/008/019-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
+<br>
+
+2. Acesse **Access control (IAM)**;
+3. Clique em **Add > Add custom role**;
+4. Informe:
+   * Custom role name: 
+   ```text
+   role-aib-lab-image-builder
+   ```
+   * Description: `Permissões necessárias para o Azure VM Image Builder publicar imagens na Azure Compute Gallery utilizando VNet dedicada`;
+   * Baseline permissions: mantenha selecionado **Start from scratch**
+5. Em **Permissions**, clique em Add permissions e localize as *roles* abaixo:
+
+```text
+Microsoft.Compute/galleries/read
+Microsoft.Compute/galleries/images/read
+Microsoft.Compute/galleries/images/versions/read
+Microsoft.Compute/galleries/images/versions/write
+Microsoft.Network/virtualNetworks/read
+Microsoft.Network/virtualNetworks/subnets/join/action
 ```
-
-Com o conteúdo abaixo:
-
-```json
-{
-  "Name": "role-aib-lab-image-builder",
-  "IsCustom": true,
-  "Description": "Permissões necessárias para o Azure VM Image Builder criar imagens em Azure Compute Gallery usando VNet dedicada.",
-  "Actions": [
-    "Microsoft.Compute/galleries/read",
-    "Microsoft.Compute/galleries/images/read",
-    "Microsoft.Compute/galleries/images/versions/read",
-    "Microsoft.Compute/galleries/images/versions/write",
-    "Microsoft.Compute/images/read",
-    "Microsoft.Compute/images/write",
-    "Microsoft.Compute/images/delete",
-    "Microsoft.Network/virtualNetworks/read",
-    "Microsoft.Network/virtualNetworks/subnets/read",
-    "Microsoft.Network/virtualNetworks/subnets/join/action",
-    "Microsoft.Network/networkInterfaces/read",
-    "Microsoft.Network/networkInterfaces/write",
-    "Microsoft.Network/networkInterfaces/delete",
-    "Microsoft.Network/networkSecurityGroups/read",
-    "Microsoft.Network/networkSecurityGroups/write",
-    "Microsoft.Network/networkSecurityGroups/delete",
-    "Microsoft.Network/privateEndpoints/read",
-    "Microsoft.Network/privateEndpoints/write",
-    "Microsoft.Network/privateEndpoints/delete",
-    "Microsoft.ContainerInstance/containerGroups/read",
-    "Microsoft.ContainerInstance/containerGroups/write",
-    "Microsoft.ContainerInstance/containerGroups/delete",
-    "Microsoft.Storage/storageAccounts/read",
-    "Microsoft.Storage/storageAccounts/write",
-    "Microsoft.Storage/storageAccounts/delete"
-  ],
-  "NotActions": [],
-  "AssignableScopes": [
-    "/subscriptions/<SUBSCRIPTION_ID>/resourceGroups/rg-aib-lab-wus2-001"
-  ]
-}
-```
-
-Agora substitua o `<SUBSCRIPTION_ID>`:
-
-```bash
-sed -i "s/<SUBSCRIPTION_ID>/$SUBSCRIPTION_ID/g" role-aib-lab-image-builder.json
-```
-
-Crie a role:
-
-```bash
-az role definition create \
-  --role-definition role-aib-lab-image-builder.json
-```
-
-Atribua a role à Managed Identity:
-
-```bash
-az role assignment create \
-  --assignee $IDENTITY_CLIENT_ID \
-  --role "role-aib-lab-image-builder" \
-  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001
-```
-
 
 
 > Em alguns casos, a propagação de RBAC pode levar alguns minutos. Se o build falhar logo após a criação da role, aguarde um pouco e tente novamente antes de sair alterando tudo. {: .prompt-info }
