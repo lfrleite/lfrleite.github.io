@@ -286,7 +286,7 @@ Version: latest
 
 ---
 
-## Passo 1 — Registrar os providers necessários
+## Passo 1 - Registrar os providers necessários
 
 Antes de usar o Azure Image Builder, precisamos garantir que alguns providers estejam registrados na assinatura.
 
@@ -324,7 +324,7 @@ O retorno esperado é **Registered**
 
 ---
 
-## Passo 2 — Criar o Resource Group
+## Passo 2 - Criar o Resource Group
 
 Vamos começar criando o Resource Group do laboratório.
 
@@ -348,7 +348,7 @@ Pelo portal:
 
 ---
 
-## Passo 3 — Criar a VNet dedicada para o build
+## Passo 3 - Criar a VNet dedicada para o build
 
 Agora vamos criar uma VNet dedicada para o processo de build.
 
@@ -417,7 +417,7 @@ Neste exemplo iremos utilizar 3 subnets:
 
 ---
 
-## Passo 4 — Criando o NAT Gateway
+## Passo 4 - Criando o NAT Gateway
 
 Como mencionei anteriormente, as subnets que criamos no passo anterior nasceram privadas, sem o antigo acesso de saída padrão.
 
@@ -456,7 +456,7 @@ Como o processo de build precisará acessar repositórios de atualização, endp
 
 ---
 
-## Passo 5 — Preparar a subnet do ACI e a Managed Identity
+## Passo 5 - Preparar a subnet do ACI e a Managed Identity
 
 ### Delegando a subnet do ACI
 
@@ -559,7 +559,7 @@ echo $IDENTITY_PRINCIPAL_ID
 
 ---
 
-## Passo 6 — Criar a Azure Compute Gallery
+## Passo 6 - Criar a Azure Compute Gallery
 
 Agora vamos criar o repositório que receberá as imagens customizadas.
 
@@ -592,7 +592,7 @@ Pelo portal:
 
 ---
 
-## Passo 7 — Criando as Image Definitions
+## Passo 7 - Criando as Image Definitions
 
 A Azure Compute Gallery trabalha com alguns conceitos importantes:
 
@@ -700,7 +700,7 @@ az sig image-definition create \
 
 ---
 
-## Passo 8 — Criando uma ROLE customizada para o Azure Image Builder
+## Passo 8 - Criando uma ROLE customizada para o Azure Image Builder
 
 Agora vem uma das partes mais importantes do laboratório: **PERMISSÕES** 
 
@@ -840,7 +840,7 @@ O resultado que queremos é esse:
 
 ---
 
-## Passo 9 — Entender o que o Image Builder cria nos bastidores
+## Passo 9 - Entender o que o Image Builder cria nos bastidores
 
 Antes de criar a primeira imagem, vale entender uma coisa importante.
 
@@ -871,7 +871,7 @@ Esses recursos existem durante o processo de build e são removidos ao final.
 
 ---
 
-## Passo 10 — Criar o template da imagem Windows Server 2022
+## Passo 10 - Criar o template da imagem Windows Server 2022
 
 Agora vamos criar a primeira imagem.
 
@@ -1009,7 +1009,7 @@ az resource invoke-action \
 
 ---
 
-## Passo 11 — Acompanhar o build da imagem Windows Server 2022
+## Passo 11 - Acompanhar o build da imagem Windows Server 2022
 
 Durante o build, acesse:
 
@@ -1044,7 +1044,7 @@ O retorno esperado ao final é algo como:
 
 ---
 
-## Passo 12 — Validar a versão criada na Azure Compute Gallery
+## Passo 12 - Validar a versão criada na Azure Compute Gallery
 
 Após o build ser concluído, acesse:
 
@@ -1059,7 +1059,7 @@ Você deverá visualizar uma versão criada automaticamente.
 
 ---
 
-## Passo 13 — Criar o template da imagem Windows Server 2025
+## Passo 13 - Criar o template da imagem Windows Server 2025
 
 Agora vamos repetir o processo para Windows Server 2025.
 
@@ -1203,7 +1203,7 @@ az resource invoke-action \
 
 ---
 
-## Passo 14 — Criar o template da imagem Ubuntu 24.04
+## Passo 14 - Criar o template da imagem Ubuntu 24.04
 
 Agora vamos para Linux.
 
@@ -1348,7 +1348,7 @@ az resource invoke-action \
 
 ---
 
-## Passo 15 — Criar o template da imagem Debian 13
+## Passo 15 - Criar o template da imagem Debian 13
 
 Agora vamos criar a imagem Debian 13.
 
@@ -1491,7 +1491,7 @@ az resource invoke-action \
 
 ---
 
-## Passo 16 — Validar todas as versões na Azure Compute Gallery
+## Passo 16 - Validar todas as versões na Azure Compute Gallery
 
 Depois que todos os builds forem concluídos, acesse:
 
@@ -1511,7 +1511,7 @@ Você deve ter uma versão publicada para cada imagem.
 
 ---
 
-## Passo 17 — Criar uma VM a partir da imagem customizada
+## Passo 17 - Criar uma VM a partir da imagem customizada
 
 Agora vamos validar se a imagem realmente funciona.
 
