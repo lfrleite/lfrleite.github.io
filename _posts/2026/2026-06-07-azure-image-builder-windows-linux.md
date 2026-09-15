@@ -23,9 +23,9 @@ Agora imagine o seguinte cenário:
 4. As imagens precisam ser versionadas;
 5. O time precisa conseguir criar novas VMs sempre a partir de uma base padronizada.
 
-É um tema sensivel e trabalhoso, mas é exatamente aqui que entra o **Azure Image Builder**.
+É um tema sensível e trabalhoso, mas é exatamente aqui que entra o **Azure Image Builder**.
 
-**Neste artigo construiremos juntos na prática uma estrutura de imagens customizadas no Azure usando o Azure Image Builder, definiremos onde ficarão todas as Golden Imagens dentro do Azure Compute Gallery. Focaremos principalmente nos S.Os vai utilizados em todo o mundo:**
+**Neste artigo construiremos juntos na prática uma estrutura de imagens customizadas no Azure usando o Azure Image Builder, definiremos onde ficarão todas as Golden Imagens dentro do Azure Compute Gallery. Focaremos principalmente nos S.Os mais utilizados em todo o mundo:**
 * Windows Server 2022;
 * Windows Server 2025;
 * Ubuntu 24.04 LTS;
@@ -201,6 +201,7 @@ Para manter um padrão mais próximo do **Cloud Adoption Framework**, vou usar n
 | Virtual Network               | `vnet-aib-lab-wus2-001`      |
 | Subnet para Build VM          | `snet-aib-build-wus2-001`    |
 | Subnet para ACI               | `snet-aib-aci-wus2-001`      |
+| Subnet para VMs de teste      | `snet-aib-test-wus2-001`     |
 | Public IP do NAT Gateway      | `pip-nat-aib-lab-wus2-001`   |
 | NAT Gateway                   | `nat-aib-lab-wus2-001`       |
 | Managed Identity              | `id-aib-lab-wus2-001`        |
@@ -214,7 +215,7 @@ Para manter um padrão mais próximo do **Cloud Adoption Framework**, vou usar n
 > A Azure Compute Gallery não aceita hífen em todos os campos da mesma forma que outros recursos, por isso o nome da galeria está usando underline. Esse tipo de detalhe parece pequeno, mas evita erro bobo durante o laboratório. 
 {: .prompt-info }
 
-> Utilizaremos um NAT Gateway para obter acesso externo a internet, pois desde 31 de Março de 2026 a Microsoft anunciou que os recursos não terão saída para Internet diretamente pelo IP público da VM. 
+> Utilizaremos um NAT Gateway para garantir a saída para a internet. Nas versões de API liberadas depois de 31 de março de 2026, as subnets de VNets novas nascem com `defaultOutboundAccess` igual a `false`, ou seja, privadas, e o Portal já cria as subnets desse jeito. Sem um método explícito de saída, a VM de build não alcança o Windows Update, os repositórios APT nem os endpoints públicos do Azure. 
 {: .prompt-info }
 
 ---
@@ -237,6 +238,9 @@ Antes de iniciar, vamos considerar alguns pré-requisitos:
 
 > O Azure Image Builder cria recursos temporários durante o build. Então, se existir uma Azure Policy muito restritiva permitindo apenas alguns tipos de recursos, o build pode falhar mesmo que o template esteja correto. 
 {: .prompt-warning }
+
+> Esse laboratório gera custo. O NAT Gateway cobra por hora e por GB processado mesmo sem nenhum build rodando, e cada versão publicada na galeria cobra armazenamento em cada região replicada. Se for só estudo, rode a limpeza do final do artigo no mesmo dia. 
+{: .prompt-info }
 
 ---
 
@@ -348,12 +352,13 @@ Pelo portal:
 
 Agora vamos criar uma VNet dedicada para o processo de build.
 
-Neste exemplo iremos utilizar 2 subnets:
+Neste exemplo iremos utilizar 3 subnets:
 
 | Subnet                    | Finalidade                                                              |
 | ------------------------- | ----------------------------------------------------------------------- |
 | `snet-aib-build-wus2-001` | Subnet onde a VM temporária de build será criada                        |
 | `snet-aib-aci-wus2-001`   | Subnet reservada para o Azure Container Instance usado no build isolado |
+| `snet-aib-test-wus2-001`  | Subnet onde as VMs de validação da imagem serão criadas no final do laboratório |
 
 > O Azure Container Instance não é um componente da imagem final e também não é uma aplicação que estamos hospedando. Ele será utilizado pelo Azure VM Image Builder durante o processo de Isolated Image Build, como recurso temporário responsável por parte da execução e orquestração da customização da imagem.
 {: .prompt-info }
@@ -371,7 +376,7 @@ Neste exemplo iremos utilizar 2 subnets:
 
    * Address space:
    ```text
-   10.250.0.0/16`
+   10.250.0.0/16
    ```
 5. Crie as subnets:
 
@@ -392,20 +397,29 @@ Neste exemplo iremos utilizar 2 subnets:
     ```text
     10.250.2.0/24
     ```
+
+   * Subnet para as VMs de validação da imagem:
+    ```text
+    snet-aib-test-wus2-001
+    ``` 
+    com 
+    ```text
+    10.250.3.0/24
+    ```
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
 
 ![azure-image-builder](assets/img/008/005-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
-> Desde o dia 31/03/2026 a Microsoft deixou de forma padrão habilitado a criação de todas subnets com Private Subnet, ou seja, sem acesso 'default' externo. Se atende a essa marcação durante a criação do seu recurso em seu ambiente.
+> Repare na opção **Private subnet** durante a criação. O Portal já marca as subnets novas como privadas, sem o antigo acesso de saída implícito. É exatamente por isso que o próximo passo cria um NAT Gateway: sem ele, nada dentro dessa VNet chega à internet.
 {: .prompt-warning }
 
 ---
 
-## Passo 4 - Criando o NAT Gateway
+## Passo 4 — Criando o NAT Gateway
 
-Como mencionei anteriormente, desde **31 de março de 2026** novas redes virtuais e subnets podem ser criadas sem o antigo acesso de saída padrão.
+Como mencionei anteriormente, as subnets que criamos no passo anterior nasceram privadas, sem o antigo acesso de saída padrão.
 
 Como o processo de build precisará acessar repositórios de atualização, endpoints do Azure e fontes de pacotes, configuraremos uma saída explícita por meio de um NAT Gateway.
 
@@ -433,7 +447,7 @@ Como o processo de build precisará acessar repositórios de atualização, endp
 
 5. Em **Networking**:
    * Virtual Network: selecione `vnet-aib-lab-wus2-001`;
-   * Select specific subnets: selecione `snet-aib-build-wus2-001` e `snet-aib-aci-wus2-001`
+   * Select specific subnets: selecione `snet-aib-build-wus2-001`, `snet-aib-aci-wus2-001` e `snet-aib-test-wus2-001`
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
 
@@ -442,7 +456,9 @@ Como o processo de build precisará acessar repositórios de atualização, endp
 
 ---
 
-## Passo 5 — Ajustar a subnet do ACI
+## Passo 5 — Preparar a subnet do ACI e a Managed Identity
+
+### Delegando a subnet do ACI
 
 Para o cenário com build isolado e subnet dedicada para o Azure Container Instance, precisamos delegar a subnet do ACI.
 
@@ -484,9 +500,7 @@ echo $ACI_SUBNET_ID
 > Guarde esses valores. Eles serão usados no `vmProfile` dos templates do Azure Image Builder. 
 {: .prompt-tip }
 
----
-
-## Passo 5 — Criar a User Assigned Managed Identity
+### Criando a User Assigned Managed Identity
 
 O Azure Image Builder precisa de uma identidade para conseguir escrever a imagem final na Azure Compute Gallery e também interagir com alguns recursos necessários durante o build.
 
@@ -512,7 +526,7 @@ Criaremos uma **User Assigned Managed Identity**:
 ![azure-image-builder](assets/img/008/009-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
-Agora vamos capturar os IDs da identidade, pois iremos utiliza-lo nos próximos passos:
+Agora vamos capturar os IDs da identidade, pois iremos utilizá-los nos próximos passos:
 
 ```bash
 SUBSCRIPTION_ID=$(az account show --query id -o tsv)
@@ -529,8 +543,15 @@ IDENTITY_CLIENT_ID=$(az identity show \
   --query clientId \
   -o tsv)
 
+IDENTITY_PRINCIPAL_ID=$(az identity show \
+  --resource-group rg-aib-lab-wus2-001 \
+  --name id-aib-lab-wus2-001 \
+  --query principalId \
+  -o tsv)
+
 echo $IDENTITY_ID
 echo $IDENTITY_CLIENT_ID
+echo $IDENTITY_PRINCIPAL_ID
 ```
 
 ![azure-image-builder](assets/img/008/010-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
@@ -561,7 +582,7 @@ Pelo portal:
 ![azure-image-builder](assets/img/008/011-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
-4. Na aba **Sharing** manteremos o metodo via RBAC, pois não iremos produzir uma imagem a ser compartilhada publicamente para comunidade;
+4. Na aba **Sharing** manteremos o método via RBAC, pois não iremos produzir uma imagem a ser compartilhada publicamente para comunidade;
 5. Adicione as **Tags** conforme a governança da sua empresa;
 6. Clique em **Review + Create**;
 7. Clique em **Create**.
@@ -591,10 +612,7 @@ As quatro definições serão criadas como:
 
 A definição `TrustedLaunchSupported` permite que a imagem seja utilizada tanto em VMs Gen2 padrão quanto em VMs configuradas com Trusted Launch.
 
-> A definição `TrustedLaunchSupported` permite que a imagem seja utilizada tanto em VMs Gen2 padrão quanto em VMs configuradas com Trusted Launch. 
-{: .prompt-tip }
-
-Darei preferencia em trabalhar com imagens **Generalized**, que é o cenário mais comum para criação de novas VMs padronizadas.
+Darei preferência em trabalhar com imagens **Generalized**, que é o cenário mais comum para criação de novas VMs padronizadas.
 
 **As atividades abaixo utilizaremos o Cloud Shell:**
 
@@ -693,14 +711,62 @@ O Azure Image Builder precisa conseguir:
 * Ler a galeria;
 * Ler as definições de imagem;
 * Criar versões de imagem;
+* Criar e remover a imagem intermediária gerada durante o processo;
 * Ler a VNet;
-* Fazer join na subnet;
-* Interagir com recursos temporários do processo de build.
+* Fazer join na subnet.
 
+Repare no que **não** está nessa lista: os recursos temporários do build. Quando registramos o provider `Microsoft.VirtualMachineImages` lá no Passo 1, o serviço do Image Builder passou a ter permissão para criar, gerenciar e excluir o staging resource group na assinatura. A VM temporária, a NIC, o NSG, o Storage Account e o Azure Container Instance são criados pelo próprio serviço, não pela sua Managed Identity. É por isso que a role abaixo é bem menor do que a maioria dos tutoriais espalhados por aí.
 
-Para este laboratório não precisamos conceder Contributor à Managed Identity no Resource Group inteiro. Vamos criar uma Custom Role com somente as ações necessárias para o cenário utilizado aqui.
+Para este laboratório também não precisamos conceder Contributor à Managed Identity no Resource Group inteiro.
 
 ### Criando a Custom Role pelo Portal
+
+Adicionar permissão por permissão na tela é trabalhoso e fácil de errar. Vamos subir um JSON pronto.
+
+**Acesse o meu repositório e baixe o arquivo [Custom_Role_AIB.json](https://github.com/lfrleite/Ruiz-Online/blob/main/Azure%20Image%20Builder/Custom_Role_AIB.json)**
+
+Conteúdo do arquivo:
+
+```json
+{
+  "properties": {
+    "roleName": "role-aib-lab-image-builder",
+    "description": "Permissões necessárias para o Azure VM Image Builder publicar imagens na Azure Compute Gallery utilizando VNet dedicada.",
+    "assignableScopes": [
+      "/providers/Microsoft.Management/managementGroups/<MANAGEMENT_GROUP_ID>"
+    ],
+    "permissions": [
+      {
+        "actions": [
+          "Microsoft.Compute/galleries/read",
+          "Microsoft.Compute/galleries/images/read",
+          "Microsoft.Compute/galleries/images/versions/read",
+          "Microsoft.Compute/galleries/images/versions/write",
+          "Microsoft.Compute/images/read",
+          "Microsoft.Compute/images/write",
+          "Microsoft.Compute/images/delete",
+          "Microsoft.Network/virtualNetworks/read",
+          "Microsoft.Network/virtualNetworks/subnets/join/action"
+        ],
+        "notActions": [],
+        "dataActions": [],
+        "notDataActions": []
+      }
+    ]
+  }
+}
+```
+
+As três ações de `Microsoft.Compute/images` costumam ser esquecidas quando o destino é só a galeria. A documentação oficial trata elas como o conjunto base de distribuição e as ações de `galleries` como adicionais. Sem elas o build customiza a imagem inteira e falha na hora de publicar, depois de você já ter esperado quase uma hora.
+
+Antes de subir o arquivo, troque o `<MANAGEMENT_GROUP_ID>` pelo ID do seu Management Group. Se não souber de cabeça, o Cloud Shell devolve a lista:
+
+```bash
+az account management-group list --query "[].{Nome:displayName, Id:name}" -o table
+```
+
+> Esse JSON está no formato que o Portal espera na opção **Start from JSON**, com o wrapper `properties`. O formato aceito pelo `az role definition create` é diferente, com `Name`, `IsCustom`, `Actions` e `AssignableScopes` na raiz do arquivo. Os dois não são intercambiáveis, então não misture. 
+{: .prompt-warning }
 
 1. Acesse o **Management Group** que contém a Subscription de Imagens - No meu caso eu tenho apenas 1 subscriptions localizada em LABS - PRD;
 ![azure-image-builder](assets/img/008/019-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
@@ -708,26 +774,69 @@ Para este laboratório não precisamos conceder Contributor à Managed Identity 
 
 2. Acesse **Access control (IAM)**;
 3. Clique em **Add > Add custom role**;
-4. Informe:
+4. Na aba **Basics**, em Baseline permissions, selecione **Start from JSON** e envie o arquivo `Custom_Role_AIB.json`;
+5. Confira os campos carregados do arquivo:
    * Custom role name: 
    ```text
    role-aib-lab-image-builder
    ```
    * Description: `Permissões necessárias para o Azure VM Image Builder publicar imagens na Azure Compute Gallery utilizando VNet dedicada`;
-   * Baseline permissions: mantenha selecionado **Start from scratch**
-5. Em **Permissions**, clique em Add permissions e localize as *roles* abaixo:
+6. Na aba **Permissions**, confirme que as nove ações vieram do arquivo:
 
 ```text
 Microsoft.Compute/galleries/read
 Microsoft.Compute/galleries/images/read
 Microsoft.Compute/galleries/images/versions/read
 Microsoft.Compute/galleries/images/versions/write
+Microsoft.Compute/images/read
+Microsoft.Compute/images/write
+Microsoft.Compute/images/delete
 Microsoft.Network/virtualNetworks/read
 Microsoft.Network/virtualNetworks/subnets/join/action
 ```
 
+7. Na aba **Assignable scopes**, confirme que o Management Group está listado. É essa propriedade que define onde a role **pode** ser atribuída depois, e ela não concede acesso nenhum sozinha;
+8. Clique em **Review + create** e depois em **Create**.
 
-> Em alguns casos, a propagação de RBAC pode levar alguns minutos. Se o build falhar logo após a criação da role, aguarde um pouco e tente novamente antes de sair alterando tudo. {: .prompt-info }
+> A role definida no Management Group fica disponível para todas as subscriptions abaixo dele, o que evita recriar a mesma definição em cada assinatura. A atribuição, essa sim, vamos manter no menor escopo possível. 
+{: .prompt-info }
+
+### Atribuindo a role à Managed Identity
+
+Criar a Role Definition não dá acesso a ninguém. Enquanto não existir um Role Assignment, a identidade continua sem permissão e o primeiro build vai falhar na publicação.
+
+Vamos atribuir a role apenas no Resource Group do laboratório:
+
+1. Acesse o Resource Group `rg-aib-lab-wus2-001`;
+2. Clique em **Access control (IAM)**;
+3. Clique em **Add > Add role assignment**;
+4. Na aba **Role**, procure por `role-aib-lab-image-builder` na guia de roles customizadas e selecione;
+5. Na aba **Members**:
+   * Assign access to: **Managed identity**;
+   * Clique em **Select members** e escolha **User-assigned managed identity**;
+   * Selecione `id-aib-lab-wus2-001`;
+6. Clique em **Review + assign**.
+
+Se preferir resolver pelo Cloud Shell, usando as variáveis que capturamos no Passo 5:
+
+```bash
+az role assignment create \
+  --assignee-object-id $IDENTITY_PRINCIPAL_ID \
+  --assignee-principal-type ServicePrincipal \
+  --role "role-aib-lab-image-builder" \
+  --scope /subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001
+```
+
+O resultado que queremos é esse:
+
+| Item      | Valor                        |
+| --------- | ---------------------------- |
+| Principal | `id-aib-lab-wus2-001`        |
+| Role      | `role-aib-lab-image-builder` |
+| Escopo    | `rg-aib-lab-wus2-001`        |
+
+> Em alguns casos, a propagação de RBAC pode levar alguns minutos. Se o build falhar logo após a criação da role, aguarde um pouco e tente novamente antes de sair alterando tudo. 
+{: .prompt-info }
 
 ---
 
@@ -735,7 +844,7 @@ Microsoft.Network/virtualNetworks/subnets/join/action
 
 Antes de criar a primeira imagem, vale entender uma coisa importante.
 
-Quando você executa o Azure VM Image Builder, ele cria recursos temporários na assinatura para realizar o build.
+Quando você executa o Azure VM Image Builder, ele cria recursos temporários na assinatura para realizar o build. Esse conjunto é criado e destruído pelo próprio serviço, com a permissão que veio do registro do provider, e não pela Managed Identity que configuramos no passo anterior.
 
 Você provavelmente verá um Resource Group temporário parecido com:
 
@@ -765,6 +874,8 @@ Esses recursos existem durante o processo de build e são removidos ao final.
 ## Passo 10 — Criar o template da imagem Windows Server 2022
 
 Agora vamos criar a primeira imagem.
+
+**Os quatro templates deste laboratório também estão no meu repositório, se preferir baixar em vez de copiar: [Azure Image Builder](https://github.com/lfrleite/Ruiz-Online/tree/main/Azure%20Image%20Builder)**
 
 Crie o arquivo:
 
@@ -1404,6 +1515,11 @@ Você deve ter uma versão publicada para cada imagem.
 
 Agora vamos validar se a imagem realmente funciona.
 
+As quatro VMs de teste vão para a `snet-aib-test-wus2-001`, que já está atrás do NAT Gateway. Por isso elas conseguem atualizar pacotes e falar com os endpoints do Azure mesmo sendo uma subnet privada.
+
+> O `az vm create` cria um IP público para cada VM e abre a porta de RDP ou SSH. Para laboratório resolve, para ambiente real não. Ali você usaria Azure Bastion ou pelo menos restringiria a origem no NSG. 
+{: .prompt-warning }
+
 ### Criando uma VM Windows Server 2022
 
 ```bash
@@ -1414,6 +1530,8 @@ az vm create \
   --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2022/versions/latest" \
   --admin-username azureuser \
   --admin-password "Troque@EssaSenha123456!" \
+  --vnet-name vnet-aib-lab-wus2-001 \
+  --subnet snet-aib-test-wus2-001 \
   --size Standard_D2s_v5 \
   --security-type TrustedLaunch
 ```
@@ -1435,6 +1553,34 @@ Get-TimeZone
 
 ---
 
+### Criando uma VM Windows Server 2025
+
+```bash
+az vm create \
+  --resource-group rg-aib-lab-wus2-001 \
+  --name vm-test-winsrv2025-aib-001 \
+  --location westus2 \
+  --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2025/versions/latest" \
+  --admin-username azureuser \
+  --admin-password "Troque@EssaSenha123456!" \
+  --vnet-name vnet-aib-lab-wus2-001 \
+  --subnet snet-aib-test-wus2-001 \
+  --size Standard_D2s_v5 \
+  --security-type TrustedLaunch
+```
+
+Valide da mesma forma que fizemos no Windows Server 2022:
+
+```powershell
+dir C:\
+dir C:\BuildInfo
+dir C:\Corporate
+Get-WindowsFeature Web-Server
+Get-TimeZone
+```
+
+---
+
 ### Criando uma VM Ubuntu 24.04
 
 ```bash
@@ -1445,6 +1591,8 @@ az vm create \
   --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-ubuntu2404/versions/latest" \
   --admin-username azureuser \
   --generate-ssh-keys \
+  --vnet-name vnet-aib-lab-wus2-001 \
+  --subnet snet-aib-test-wus2-001 \
   --size Standard_D2s_v5 \
   --security-type TrustedLaunch
 ```
@@ -1474,6 +1622,8 @@ az vm create \
   --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-debian13/versions/latest" \
   --admin-username azureuser \
   --generate-ssh-keys \
+  --vnet-name vnet-aib-lab-wus2-001 \
+  --subnet snet-aib-test-wus2-001 \
   --size Standard_D2s_v5 \
   --security-type TrustedLaunch
 ```
@@ -1685,6 +1835,38 @@ Nesses casos, valide:
 
 ---
 
+### Build que trava baixando pacotes ou atualizações
+
+É o erro mais comum depois da mudança de saída padrão. A subnet está privada e sem método explícito de saída, então o `apt-get update` e o Windows Update ficam esperando até estourar o `buildTimeoutInMinutes`.
+
+Confirme se a subnet de build está associada ao NAT Gateway:
+
+```bash
+az network vnet subnet show \
+  --resource-group rg-aib-lab-wus2-001 \
+  --vnet-name vnet-aib-lab-wus2-001 \
+  --name snet-aib-build-wus2-001 \
+  --query "{PrivateSubnet:defaultOutboundAccess, NatGateway:natGateway.id}"
+```
+
+---
+
+### Erro de delegation na subnet do ACI
+
+Se o build isolado não sobe o container, geralmente a subnet do ACI está sem a delegation correta ou já tem outro recurso ocupando ela.
+
+```bash
+az network vnet subnet show \
+  --resource-group rg-aib-lab-wus2-001 \
+  --vnet-name vnet-aib-lab-wus2-001 \
+  --name snet-aib-aci-wus2-001 \
+  --query delegations
+```
+
+O retorno precisa apontar para `Microsoft.ContainerInstance/containerGroups`.
+
+---
+
 ## Checklist final
 
 Antes de considerar o laboratório finalizado, valide:
@@ -1694,11 +1876,12 @@ Antes de considerar o laboratório finalizado, valide:
 * [ ] VNet criada;
 * [ ] Subnet de build criada;
 * [ ] Subnet de ACI criada e delegada;
+* [ ] Subnet de teste criada;
 * [ ] Managed Identity criada;
 * [ ] Azure Compute Gallery criada;
 * [ ] Image Definitions criadas;
-* [ ] Role customizada criada;
-* [ ] Role atribuída à Managed Identity;
+* [ ] Role customizada criada no Management Group;
+* [ ] Role atribuída à Managed Identity no Resource Group;
 * [ ] Template Windows Server 2022 criado;
 * [ ] Build Windows Server 2022 concluído;
 * [ ] Template Windows Server 2025 criado;
@@ -1708,39 +1891,10 @@ Antes de considerar o laboratório finalizado, valide:
 * [ ] Template Debian 13 criado;
 * [ ] Build Debian 13 concluído;
 * [ ] Versões publicadas na Azure Compute Gallery;
-* [ ] VMs de teste criadas;
+* [ ] VMs de teste criadas para os quatro sistemas operacionais;
 * [ ] Customizações validadas;
 * [ ] Evidências coletadas;
 * [ ] Recursos temporários revisados.
-
----
-
-## Sugestão de prints para o artigo
-
-Para manter o artigo bem documentado, a sugestão é coletar os seguintes prints:
-
-| Arquivo                                     | Print sugerido                   |
-| ------------------------------------------- | -------------------------------- |
-| `001-azure-image-builder-windows-linux.png` | Capa do artigo                   |
-| `002-resource-group-aib.png`                | Resource Group criado            |
-| `003-provider-registration.png`             | Providers registrados            |
-| `004-vnet-aib.png`                          | VNet e subnets                   |
-| `005-managed-identity-aib.png`              | Managed Identity                 |
-| `006-compute-gallery.png`                   | Azure Compute Gallery            |
-| `007-image-definitions.png`                 | Image Definitions                |
-| `008-role-assignment-aib.png`               | RBAC da Managed Identity         |
-| `009-temporary-resource-group.png`          | Resource Group temporário do AIB |
-| `010-template-windows-2022.png`             | Template Windows 2022            |
-| `011-build-windows-2022-running.png`        | Build Windows 2022 em execução   |
-| `012-build-windows-2022-success.png`        | Build Windows 2022 finalizado    |
-| `013-gallery-version-windows-2022.png`      | Versão Windows 2022 na galeria   |
-| `014-template-windows-2025.png`             | Template Windows 2025            |
-| `015-template-ubuntu-2404.png`              | Template Ubuntu 24.04            |
-| `016-template-debian-13.png`                | Template Debian 13               |
-| `017-all-gallery-images.png`                | Todas as imagens na galeria      |
-| `018-validate-windows-vm.png`               | Validação da VM Windows          |
-| `019-validate-ubuntu-vm.png`                | Validação da VM Ubuntu           |
-| `020-validate-debian-vm.png`                | Validação da VM Debian           |
 
 ---
 
@@ -1785,11 +1939,32 @@ az group delete \
   --no-wait
 ```
 
-> Em ambiente real, muito cuidado com esse comando. Ele remove tudo dentro do Resource Group. {: .prompt-danger }
+> Em ambiente real, muito cuidado com esse comando. Ele remove tudo dentro do Resource Group. 
+{: .prompt-danger }
 
 ---
 
-## The End
+## Artigos
+
+| Nome | Link |
+| :---: | :---: |
+| Arquivos deste laboratório | <https://github.com/lfrleite/Ruiz-Online/tree/main/Azure%20Image%20Builder> |
+| Azure VM Image Builder overview | <https://learn.microsoft.com/en-us/azure/virtual-machines/image-builder-overview> |
+| Create a Windows VM image by using Azure VM Image Builder | <https://learn.microsoft.com/en-us/azure/virtual-machines/windows/image-builder> |
+| Create a Linux image and distribute it to Azure Compute Gallery | <https://learn.microsoft.com/en-us/azure/virtual-machines/linux/image-builder> |
+| Configure Azure VM Image Builder permissions | <https://learn.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-permissions-cli> |
+| Azure VM Image Builder networking options | <https://learn.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-networking> |
+| Isolated Image Builds for Azure VM Image Builder | <https://learn.microsoft.com/en-us/azure/virtual-machines/security-isolated-image-builds-image-builder> |
+| Azure Compute Gallery overview | <https://learn.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries> |
+| Default outbound access in Azure | <https://learn.microsoft.com/en-us/azure/virtual-network/ip-services/default-outbound-access> |
+| Create or update Azure custom roles using the Azure portal | <https://learn.microsoft.com/en-us/azure/role-based-access-control/custom-roles-portal> |
+| Cloud Adoption Framework - Naming convention | <https://learn.microsoft.com/pt-br/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming> |
+| Ubuntu images on Azure | <https://documentation.ubuntu.com/azure/azure-how-to/instances/find-ubuntu-images/> |
+| Debian on Microsoft Azure | <https://wiki.debian.org/Cloud/MicrosoftAzure> |
+
+---
+
+## The End!
 
 Chegamos ao final de mais um laboratório bem interessante.
 
@@ -1811,17 +1986,6 @@ Golden Image boa é aquela que nasce documentada, testada, versionada e confiáv
 
 E como sempre: ambiente corporativo não combina com clique perdido e configuração na memória. Documente tudo.
 
----
+Espero que vocês tenham curtido tanto quanto eu curti de produzi-lo. Deixem seus comentários no meu Linkedin sobre o que você achou e se fez sentido! 
 
-## Referências oficiais
-
-* [Azure VM Image Builder overview](https://learn.microsoft.com/en-us/azure/virtual-machines/image-builder-overview)
-* [Create a Windows VM image by using Azure VM Image Builder](https://learn.microsoft.com/en-us/azure/virtual-machines/windows/image-builder)
-* [Create a Linux image and distribute it to Azure Compute Gallery](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/image-builder)
-* [Configure Azure VM Image Builder permissions](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-permissions-cli)
-* [Azure VM Image Builder networking options](https://learn.microsoft.com/en-us/azure/virtual-machines/linux/image-builder-networking)
-* [Isolated Image Builds for Azure VM Image Builder](https://learn.microsoft.com/en-us/azure/virtual-machines/security-isolated-image-builds-image-builder)
-* [Azure Compute Gallery overview](https://learn.microsoft.com/en-us/azure/virtual-machines/shared-image-galleries)
-* [Cloud Adoption Framework - Naming convention](https://learn.microsoft.com/pt-br/azure/cloud-adoption-framework/ready/azure-best-practices/resource-naming)
-* [Ubuntu images on Azure](https://documentation.ubuntu.com/azure/azure-how-to/instances/find-ubuntu-images/)
-* [Debian on Microsoft Azure](https://wiki.debian.org/Cloud/MicrosoftAzure)
+Obrigado mais uma vez por me acompanharem até aqui! Nos vemos na próxima!
