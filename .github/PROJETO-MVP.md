@@ -87,9 +87,9 @@ Estados sugeridos: **rascunho → lab pendente → lab em execução → evidên
 
 Estado observado em laboratório pessoal em 15/11:
 
-- `rg-aib-lab-wus2-001` e `gal_aib_lab_wus2_001` existem.
-- Providers registrados; `vnet-aib-lab-wus2-001`, três subnets (build, ACI, test), NAT Gateway e identidade `id-aib-lab-wus2-001` existentes.
-- Definições `imgdef-winsrv2022`, `imgdef-winsrv2025`, `imgdef-ubuntu2404` e `imgdef-debian13` em `Succeeded`.
+- Resource Group e Azure Compute Gallery do laboratório pessoal existem.
+- Providers registrados; VNet, três subnets (build, ACI, test), NAT Gateway e Managed Identity do laboratório existentes.
+- Quatro Image Definitions (Windows Server 2022/2025, Ubuntu 24.04 e Debian 13) em `Succeeded`.
 - **Ainda não existem** Image Templates, Image Versions nem VMs de validação nesse Resource Group.
 - A consulta de RBAC usada inicialmente retornou erro por incompatibilidade entre `--all` e `--scope`; **não há diagnóstico concluído de acesso**.
 
