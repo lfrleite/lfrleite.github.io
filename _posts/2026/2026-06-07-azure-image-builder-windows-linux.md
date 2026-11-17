@@ -1487,8 +1487,19 @@ Depois de publicar cada versão, vamos criar uma VM de teste. Assim conseguimos 
 
 As VMs de teste utilizarão a `snet-aib-test-wus2-001`, associada ao NAT Gateway. Antes de criar a VM, confira se a versão já está disponível na Compute Gallery.
 
-> Confira a configuração de rede antes de executar os exemplos. A criação de IP público e a liberação de SSH/RDP precisam ser revisadas. Se possível, utilize acesso privado ou Azure Bastion para as validações. 
+> Para esses testes, não vamos criar IP público nem abrir regras de entrada para SSH ou RDP. Utilize o **Run command** do Portal para os comandos de validação ou um Azure Bastion existente. 
 {: .prompt-warning }
+
+Antes de criar as VMs Windows, defina uma senha forte no Cloud Shell sem deixá-la escrita no comando ou no histórico:
+
+```bash
+read -r -s -p "Senha para as VMs Windows do laboratório: " VM_ADMIN_PASSWORD
+echo
+```
+
+A variável fica disponível somente nesta sessão do Cloud Shell. Se abrir outra sessão, informe a senha novamente. Para Linux, vamos utilizar autenticação por chave SSH.
+
+Os exemplos abaixo criarão **VMs sem IP público**. Para validar o sistema operacional, podemos usar **Run command** no Portal Azure ou Azure Bastion, caso esteja configurado. Assim não precisamos abrir SSH ou RDP diretamente na internet.
 
 ### Criando uma VM Windows Server 2022
 
@@ -1499,9 +1510,11 @@ az vm create \
   --location westus2 \
   --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2022/versions/latest" \
   --admin-username azureuser \
-  --admin-password "Troque@EssaSenha123456!" \
+  --admin-password "$VM_ADMIN_PASSWORD" \
   --vnet-name vnet-aib-lab-wus2-001 \
   --subnet snet-aib-test-wus2-001 \
+  --public-ip-address "" \
+  --nsg-rule NONE \
   --size Standard_D2s_v5 \
   --security-type TrustedLaunch
 ```
@@ -1532,9 +1545,11 @@ az vm create \
   --location westus2 \
   --image "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/rg-aib-lab-wus2-001/providers/Microsoft.Compute/galleries/gal_aib_lab_wus2_001/images/imgdef-winsrv2025/versions/latest" \
   --admin-username azureuser \
-  --admin-password "Troque@EssaSenha123456!" \
+  --admin-password "$VM_ADMIN_PASSWORD" \
   --vnet-name vnet-aib-lab-wus2-001 \
   --subnet snet-aib-test-wus2-001 \
+  --public-ip-address "" \
+  --nsg-rule NONE \
   --size Standard_D2s_v5 \
   --security-type TrustedLaunch
 ```
@@ -1563,6 +1578,8 @@ az vm create \
   --generate-ssh-keys \
   --vnet-name vnet-aib-lab-wus2-001 \
   --subnet snet-aib-test-wus2-001 \
+  --public-ip-address "" \
+  --nsg-rule NONE \
   --size Standard_D2s_v5 \
   --security-type TrustedLaunch
 ```
@@ -1594,6 +1611,8 @@ az vm create \
   --generate-ssh-keys \
   --vnet-name vnet-aib-lab-wus2-001 \
   --subnet snet-aib-test-wus2-001 \
+  --public-ip-address "" \
+  --nsg-rule NONE \
   --size Standard_D2s_v5 \
   --security-type TrustedLaunch
 ```
