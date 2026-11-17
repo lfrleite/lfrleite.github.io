@@ -826,15 +826,35 @@ O staging Resource Group pode continuar existindo depois do build. A exclusão d
 
 ## Passo 10 - Criar o template da imagem Windows Server 2022
 
-Agora vamos criar a primeira imagem.
+A infraestrutura está preparada, mas ainda precisamos confirmar a atribuição da Custom Role antes de criar o primeiro Image Template.
+
+Se você abriu outra sessão do Cloud Shell, recupere as variáveis abaixo. Elas serão usadas nos quatro templates; os IDs não precisam aparecer nos prints publicados:
+
+```bash
+RG="rg-aib-lab-wus2-001"
+VNET="vnet-aib-lab-wus2-001"
+SUBSCRIPTION_ID=$(az account show --query id -o tsv)
+IDENTITY_ID=$(az identity show -g "$RG" -n id-aib-lab-wus2-001 --query id -o tsv)
+BUILD_SUBNET_ID=$(az network vnet subnet show -g "$RG" --vnet-name "$VNET" -n snet-aib-build-wus2-001 --query id -o tsv)
+ACI_SUBNET_ID=$(az network vnet subnet show -g "$RG" --vnet-name "$VNET" -n snet-aib-aci-wus2-001 --query id -o tsv)
+```
+
+Também confira se a SKU da imagem de origem está disponível em West US 2. A opção `latest` permite pegar a versão mais recente do Marketplace, mas, para reproduzir o mesmo resultado futuramente, será importante registrar a versão efetivamente utilizada.
+
+Vamos começar com Windows Server 2022.
 
 **Os quatro templates JSON estão descritos abaixo.** Depois dos testes, vou colocar as versões validadas no [repositório de apoio](https://github.com/lfrleite/Ruiz-Online/tree/main/Azure%20Image%20Builder).
 
-Crie o arquivo:
+No Cloud Shell Bash, abra um arquivo com o editor:
 
 ```bash
-aib-winsrv2022-template.json
+nano aib-winsrv2022-template.json
 ```
+
+Cole o JSON abaixo. No `nano`, salve com **Ctrl+O**, confirme com **Enter** e saia com **Ctrl+X**.
+
+> No Windows, o customizer `WindowsUpdate` está limitado a **20 atualizações** por execução. Isso não garante que o sistema ficará totalmente atualizado. Vamos verificar o estado das atualizações na VM de teste depois do build. O `WindowsRestart` foi incluído porque algumas atualizações exigem reinicialização.
+{: .prompt-info }
 
 Conteúdo:
 
@@ -889,14 +909,6 @@ Conteúdo:
         "type": "WindowsRestart",
         "name": "RestartAfterUpdates",
         "restartTimeout": "30m"
-      },
-      {
-        "type": "PowerShell",
-        "name": "CorporateOptionalExamples",
-        "inline": [
-          "New-Item -Path 'C:\\Corporate' -ItemType Directory -Force",
-          "Set-Content -Path 'C:\\Corporate\\README.txt' -Value 'Aqui poderiam entrar agentes corporativos, hardening, scripts de segurança ou ferramentas internas.'"
-        ]
       }
     ],
     "distribute": [
@@ -934,9 +946,10 @@ sed -i "s|<IDENTITY_ID>|$IDENTITY_ID|g" aib-winsrv2022-template.json
 sed -i "s|<SUBSCRIPTION_ID>|$SUBSCRIPTION_ID|g" aib-winsrv2022-template.json
 sed -i "s|<BUILD_SUBNET_ID>|$BUILD_SUBNET_ID|g" aib-winsrv2022-template.json
 sed -i "s|<ACI_SUBNET_ID>|$ACI_SUBNET_ID|g" aib-winsrv2022-template.json
+python3 -m json.tool aib-winsrv2022-template.json > /dev/null && echo "JSON com sintaxe válida"
 ```
 
-Crie o Image Template:
+Crie o Image Template (esse comando faz uma alteração no Azure):
 
 ```bash
 az resource create \
@@ -950,17 +963,21 @@ az resource create \
 
 
 
-Agora execute o build:
+Com o Image Template criado e o estado de provisionamento validado, podemos iniciar o build:
 
 ```bash
 az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --name aib-winsrv2022 \
+  --api-version 2024-02-01 \
   --action Run
 ```
 
 ---
+
+
+<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
 
 ## Passo 11 - Acompanhar o build da imagem Windows Server 2022
 
@@ -981,7 +998,7 @@ az resource show \
   --query properties.lastRunStatus
 ```
 
-O retorno esperado ao final é algo como:
+A estrutura da resposta pode ser parecida com a abaixo. **É apenas um exemplo do formato**, não é o resultado de um build executado neste laboratório:
 
 ```json
 {
@@ -999,36 +1016,35 @@ O retorno esperado ao final é algo como:
 
 ## Passo 12 - Validar a versão criada na Azure Compute Gallery
 
-Após o build ser concluído, acesse:
+Depois que o build terminar com sucesso, acesse:
 
 1. **Azure Compute Gallery**;
 2. Galeria `gal_aib_lab_wus2_001`;
 3. Image definition `imgdef-winsrv2022`;
 4. Clique em **Versions**.
 
-Você deverá visualizar uma versão criada automaticamente.
+Se o build for concluído e a distribuição funcionar, aparecerá uma versão nessa Image Definition. Precisamos registrar o identificador real da versão e verificar o estado de provisionamento.
 
 
 
 ---
 
+
+<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+
 ## Passo 13 - Criar o template da imagem Windows Server 2025
 
 Agora vamos repetir o processo para Windows Server 2025.
 
-A ideia é a mesma, alterando:
+O processo é o mesmo do Windows Server 2022. Mudam a SKU do Marketplace, o destino na galeria e os identificadores do template.
 
-* Nome do template;
-* SKU da imagem base;
-* Image Definition de destino;
-* Run Output Name;
-* Tags.
-
-Crie o arquivo:
+No Cloud Shell Bash, abra um arquivo com o editor:
 
 ```bash
-aib-winsrv2025-template.json
+nano aib-winsrv2025-template.json
 ```
+
+Cole o JSON abaixo. No `nano`, salve com **Ctrl+O**, confirme com **Enter** e saia com **Ctrl+X**.
 
 Conteúdo:
 
@@ -1083,14 +1099,6 @@ Conteúdo:
         "type": "WindowsRestart",
         "name": "RestartAfterUpdates",
         "restartTimeout": "30m"
-      },
-      {
-        "type": "PowerShell",
-        "name": "CorporateOptionalExamples",
-        "inline": [
-          "New-Item -Path 'C:\\Corporate' -ItemType Directory -Force",
-          "Set-Content -Path 'C:\\Corporate\\README.txt' -Value 'Exemplo de ponto para instalação de Azure Monitor Agent, Defender, ferramentas internas ou hardening corporativo.'"
-        ]
       }
     ],
     "distribute": [
@@ -1128,6 +1136,7 @@ sed -i "s|<IDENTITY_ID>|$IDENTITY_ID|g" aib-winsrv2025-template.json
 sed -i "s|<SUBSCRIPTION_ID>|$SUBSCRIPTION_ID|g" aib-winsrv2025-template.json
 sed -i "s|<BUILD_SUBNET_ID>|$BUILD_SUBNET_ID|g" aib-winsrv2025-template.json
 sed -i "s|<ACI_SUBNET_ID>|$ACI_SUBNET_ID|g" aib-winsrv2025-template.json
+python3 -m json.tool aib-winsrv2025-template.json > /dev/null && echo "JSON com sintaxe válida"
 ```
 
 Crie o template:
@@ -1149,6 +1158,7 @@ az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --name aib-winsrv2025 \
+  --api-version 2024-02-01 \
   --action Run
 ```
 
@@ -1156,17 +1166,23 @@ az resource invoke-action \
 
 ---
 
+
+<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+
 ## Passo 14 - Criar o template da imagem Ubuntu 24.04
 
-Agora vamos para Linux.
+> A execução de `apt-get upgrade` pode atualizar pacotes que exigem uma nova inicialização. Por isso, os testes de boot, do Azure Linux Agent e dos pacotes serão feitos nas VMs criadas a partir das imagens, não apenas pela saída dos customizers.
+{: .prompt-info }
 
-Para o Ubuntu, vamos usar customizações do tipo `Shell` para instalar pacotes e registrar as informações da imagem.
+No Ubuntu, utilizaremos o customizer `Shell` para atualizar pacotes, instalar ferramentas e gravar um arquivo de identificação da imagem.
 
-Crie o arquivo:
+No Cloud Shell Bash, abra um arquivo com o editor:
 
 ```bash
-aib-ubuntu2404-template.json
+nano aib-ubuntu2404-template.json
 ```
+
+Cole o JSON abaixo. No `nano`, salve com **Ctrl+O**, confirme com **Enter** e saia com **Ctrl+X**.
 
 Conteúdo:
 
@@ -1223,7 +1239,7 @@ Conteúdo:
       },
       {
         "type": "Shell",
-        "name": "ValidateAzureLinuxAgent",
+        "name": "InspectAzureLinuxAgent",
         "inline": [
           "systemctl status walinuxagent --no-pager || true"
         ]
@@ -1273,6 +1289,7 @@ sed -i "s|<IDENTITY_ID>|$IDENTITY_ID|g" aib-ubuntu2404-template.json
 sed -i "s|<SUBSCRIPTION_ID>|$SUBSCRIPTION_ID|g" aib-ubuntu2404-template.json
 sed -i "s|<BUILD_SUBNET_ID>|$BUILD_SUBNET_ID|g" aib-ubuntu2404-template.json
 sed -i "s|<ACI_SUBNET_ID>|$ACI_SUBNET_ID|g" aib-ubuntu2404-template.json
+python3 -m json.tool aib-ubuntu2404-template.json > /dev/null && echo "JSON com sintaxe válida"
 ```
 
 Crie o template:
@@ -1294,6 +1311,7 @@ az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --name aib-ubuntu2404 \
+  --api-version 2024-02-01 \
   --action Run
 ```
 
@@ -1301,15 +1319,20 @@ az resource invoke-action \
 
 ---
 
+
+<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+
 ## Passo 15 - Criar o template da imagem Debian 13
 
-Agora vamos criar a imagem Debian 13.
+Vamos preparar também o Debian 13. Antes do build, confirme a SKU disponível no Marketplace. A imagem ser criada com sucesso não significa que o Azure Update Manager dará suporte a esse sistema operacional.
 
-Crie o arquivo:
+No Cloud Shell Bash, abra um arquivo com o editor:
 
 ```bash
-aib-debian13-template.json
+nano aib-debian13-template.json
 ```
+
+Cole o JSON abaixo. No `nano`, salve com **Ctrl+O**, confirme com **Enter** e saia com **Ctrl+X**.
 
 Conteúdo:
 
@@ -1366,7 +1389,7 @@ Conteúdo:
       },
       {
         "type": "Shell",
-        "name": "ValidateAzureLinuxAgent",
+        "name": "InspectAzureLinuxAgent",
         "inline": [
           "systemctl status walinuxagent --no-pager || true"
         ]
@@ -1416,6 +1439,7 @@ sed -i "s|<IDENTITY_ID>|$IDENTITY_ID|g" aib-debian13-template.json
 sed -i "s|<SUBSCRIPTION_ID>|$SUBSCRIPTION_ID|g" aib-debian13-template.json
 sed -i "s|<BUILD_SUBNET_ID>|$BUILD_SUBNET_ID|g" aib-debian13-template.json
 sed -i "s|<ACI_SUBNET_ID>|$ACI_SUBNET_ID|g" aib-debian13-template.json
+python3 -m json.tool aib-debian13-template.json > /dev/null && echo "JSON com sintaxe válida"
 ```
 
 Crie o template:
@@ -1437,12 +1461,16 @@ az resource invoke-action \
   --resource-group rg-aib-lab-wus2-001 \
   --resource-type Microsoft.VirtualMachineImages/imageTemplates \
   --name aib-debian13 \
+  --api-version 2024-02-01 \
   --action Run
 ```
 
 
 
 ---
+
+
+<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
 
 ## Passo 16 - Validar todas as versões na Azure Compute Gallery
 
@@ -1480,9 +1508,11 @@ read -r -s -p "Senha para as VMs Windows do laboratório: " VM_ADMIN_PASSWORD
 echo
 ```
 
-A variável fica disponível somente nesta sessão do Cloud Shell. Se abrir outra sessão, informe a senha novamente. Para Linux, vamos utilizar autenticação por chave SSH.
+A variável de senha vale para a sessão atual do Cloud Shell. Para Linux, usaremos chave SSH. Nos testes sem IP público, o Run command pode ser suficiente para comprovar as configurações.
 
-Os exemplos abaixo criarão **VMs sem IP público**. Para validar o sistema operacional, podemos usar **Run command** no Portal Azure ou Azure Bastion, caso esteja configurado. Assim não precisamos abrir SSH ou RDP diretamente na internet.
+Os comandos abaixo criam **VMs sem IP público**. Para validar o resultado, podemos utilizar **Run command** no Portal Azure ou Azure Bastion, se estiver configurado.
+
+> O comando `az vm create` abaixo utilizará a versão `latest` da definição escolhida. Confirme antes se há uma versão válida na Compute Gallery; se quiser reproduzir um build específico, substitua `latest` pela versão exata publicada.
 
 ### Criando uma VM Windows Server 2022
 
@@ -1502,15 +1532,13 @@ az vm create \
   --security-type TrustedLaunch
 ```
 
-> Use uma senha segura no seu ambiente. A senha acima está apenas como exemplo para laboratório. 
+> A senha é informada na sessão atual do Cloud Shell, e não escrita diretamente no comando. Ao terminar a criação das VMs Windows, remova a variável com `unset VM_ADMIN_PASSWORD`. 
 {: .prompt-warning }
 
-Depois de criada, acesse a VM via RDP ou Bastion e valide:
+Depois que a VM for criada, execute os comandos abaixo pelo **Run command** ou por uma conexão administrativa privada:
 
 ```powershell
-dir C:\
-dir C:\BuildInfo
-dir C:\Corporate
+Get-Content C:\BuildInfo\image-info.txt
 Get-WindowsFeature Web-Server
 Get-TimeZone
 ```
@@ -1537,12 +1565,10 @@ az vm create \
   --security-type TrustedLaunch
 ```
 
-Valide da mesma forma que fizemos no Windows Server 2022:
+Na VM Windows Server 2025, valide as mesmas customizações:
 
 ```powershell
-dir C:\
-dir C:\BuildInfo
-dir C:\Corporate
+Get-Content C:\BuildInfo\image-info.txt
 Get-WindowsFeature Web-Server
 Get-TimeZone
 ```
