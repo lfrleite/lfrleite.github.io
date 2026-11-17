@@ -1,6 +1,6 @@
 ---
 #layout: post
-title: "Azure Image Builder na prática: Windows Server 2022/2025 e Linux Ubuntu 24.04 e Debian 13"
+title: "Azure VM Image Builder na prática: Windows Server 2022/2025, Ubuntu 24.04 e Debian 13"
 date: 2026-06-07 08:00:00 -03:00
 categories: [Azure]
 tags: [azure, azure-image-builder, windows-server, linux, golden-image]
@@ -389,7 +389,7 @@ Neste exemplo iremos utilizar 3 subnets:
 
 ---
 
-## Passo 4 - Criando o NAT Gateway
+## Passo 4 - Criar o NAT Gateway
 
 As subnets não terão saída padrão para a internet. Vamos associá-las ao **NAT Gateway** para permitir acesso aos endpoints e repositórios necessários.
 
@@ -560,7 +560,7 @@ Pelo portal:
 
 ---
 
-## Passo 7 - Criando as Image Definitions
+## Passo 7 - Criar as Image Definitions
 
 Antes dos comandos, precisamos diferenciar três elementos:
 
@@ -663,12 +663,12 @@ az sig image-definition create \
 ![azure-image-builder](assets/img/008/018-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
-> Confira a geração da imagem base. Não podemos publicar uma imagem Gen2 em uma definição Gen1. 
+> **Antes dos builds:** confirme se a imagem de origem é Gen2 e se o tipo de segurança é compatível com a definição da galeria. No AIB, a Microsoft exige compatibilidade entre origem e destino quando utilizamos `TrustedLaunchSupported`. Uma imagem de origem Gen2 comum não deve ser tratada automaticamente como `TrustedLaunchSupported`. Vamos verificar cada SKU antes de executar os templates. 
 {: .prompt-warning }
 
 ---
 
-## Passo 8 - Criando a Custom Role para o Azure Image Builder
+## Passo 8 - Criar a Custom Role para o Azure Image Builder
 
 Já temos a rede, a identidade e a galeria. Agora vamos configurar as permissões da Managed Identity.
 
@@ -793,7 +793,7 @@ Precisamos encontrar a role atribuída à identidade no Resource Group (ou em um
 
 ---
 
-## Passo 9 - Entender o que o Image Builder cria nos bastidores
+## Passo 9 - Conferir os recursos temporários do Image Builder
 
 Antes do primeiro template, veja onde o Image Builder cria os recursos temporários.
 
@@ -977,7 +977,7 @@ az resource invoke-action \
 ---
 
 
-<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+<!-- PRINT 027 PENDENTE: Windows Server 2022 — Image Template criado e execução iniciada. -->
 
 ## Passo 11 - Acompanhar o build da imagem Windows Server 2022
 
@@ -1030,7 +1030,7 @@ Se o build for concluído e a distribuição funcionar, aparecerá uma versão n
 ---
 
 
-<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+<!-- PRINT 028 PENDENTE: Windows Server 2022 — lastRunStatus e versão na Compute Gallery. -->
 
 ## Passo 13 - Criar o template da imagem Windows Server 2025
 
@@ -1167,7 +1167,7 @@ az resource invoke-action \
 ---
 
 
-<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+<!-- PRINT 029 PENDENTE: Windows Server 2025 — Image Template, build e resultado. -->
 
 ## Passo 14 - Criar o template da imagem Ubuntu 24.04
 
@@ -1320,7 +1320,7 @@ az resource invoke-action \
 ---
 
 
-<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+<!-- PRINT 030 PENDENTE: Ubuntu 24.04 — Image Template, build e resultado. -->
 
 ## Passo 15 - Criar o template da imagem Debian 13
 
@@ -1470,9 +1470,11 @@ az resource invoke-action \
 ---
 
 
-<!-- PRINT PENDENTE: Image Template criado, resultado do build, versão publicada e validação funcional da VM. Anexar somente resultados reais. -->
+<!-- PRINT 031 PENDENTE: Debian 13 — Image Template, build e resultado. -->
 
 ## Passo 16 - Validar todas as versões na Azure Compute Gallery
+
+<!-- PRINT 032 PENDENTE: Azure Compute Gallery — Versions das quatro definições e estados de publicação. -->
 
 Depois de executar os builds, vamos conferir se as versões foram publicadas na galeria:
 
@@ -1493,6 +1495,8 @@ A definição da imagem não é suficiente. Precisamos confirmar que existe uma 
 ---
 
 ## Passo 17 - Criar uma VM a partir da imagem customizada
+
+<!-- PRINT 033-036 PENDENTE: Para cada VM, registrar a imagem/versão de origem, estado de provisionamento e comandos de validação dentro do SO. -->
 
 Depois de publicar cada versão, vamos criar uma VM de teste. Assim conseguimos conferir se o sistema inicia e se as customizações foram aplicadas.
 
@@ -1896,7 +1900,7 @@ az group delete \
 
 ## The End!
 
-Fala pessoALL! Chegamos à parte final do que já conseguimos configurar no laboratório.
+É isso aí, pessoALL! Chegamos ao final das configurações que já conseguimos validar no laboratório.
 
 A VNet, o NAT Gateway, a Managed Identity e as quatro Image Definitions estão criados. Ainda faltam os Image Templates, os builds, as versões publicadas e os testes nas VMs.
 
