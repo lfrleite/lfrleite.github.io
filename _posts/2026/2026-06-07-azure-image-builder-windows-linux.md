@@ -12,11 +12,11 @@ image:
 
 Fala pessoALL! Tranquilidade total?
 
-Hoje vamos trabalhar com **Azure VM Image Builder** para criar imagens personalizadas de Windows Server e Linux.
+Hoje vamos montar imagens personalizadas de Windows Server e Linux usando o **Azure VM Image Builder**.
 
-Sabe quando precisamos provisionar várias VMs com os mesmos pacotes e configurações? Dá para fazer tudo manualmente, claro. O problema começa quando precisamos recriar essas máquinas ou manter todas elas atualizadas.
+Quem trabalha com infraestrutura conhece o trabalho de instalar os mesmos pacotes e repetir configurações em várias VMs. Fazer isso manualmente resolve no começo, mas não ajuda muito quando precisamos padronizar dezenas de máquinas.
 
-Para esse laboratório escolhi o Azure VM Image Builder. A ideia é preparar as imagens e publicá-las na **Azure Compute Gallery**, mantendo um controle das versões que poderão ser utilizadas nas próximas VMs.
+A proposta é preparar essas imagens uma vez e publicá-las na **Azure Compute Gallery**. Depois poderemos criar novas VMs utilizando uma versão conhecida da imagem.
 
 Vou trabalhar com quatro sistemas operacionais:
 
@@ -25,9 +25,9 @@ Vou trabalhar com quatro sistemas operacionais:
 - Ubuntu 24.04 LTS;
 - Debian 13.
 
-Vamos configurar uma VNet dedicada, preparar as permissões e montar os templates. Depois precisamos executar os builds e criar VMs para testar cada imagem.
+Vamos configurar a rede, criar as permissões e preparar os templates. Depois executaremos os builds e criaremos uma VM de cada sistema para conferir as customizações.
 
-> **Laboratório em atualização:** a infraestrutura de rede, a Managed Identity, a Compute Gallery e as quatro Image Definitions já foram criadas. Os templates, builds, versões publicadas e testes nas VMs ainda estão em validação. Vou incluir os prints dessas etapas conforme forem concluídas.
+> **Status do laboratório:** a rede, a Managed Identity, a galeria e as quatro definições de imagem já estão criadas. Os builds, a publicação das versões e os testes nas VMs ainda não foram executados. As próximas capturas serão acrescentadas após cada validação.
 {: .prompt-warning }
 
 Agora vamos colocar a mão na massa!
@@ -36,9 +36,9 @@ Agora vamos colocar a mão na massa!
 
 ## O que é o Azure VM Image Builder?
 
-O **Azure VM Image Builder (AIB)** automatiza a criação de imagens personalizadas de máquinas virtuais. Escolhemos uma imagem base, informamos quais customizações devem ser aplicadas e definimos onde a imagem final será armazenada.
+O **Azure VM Image Builder (AIB)** pega uma imagem de origem, executa os comandos que configuramos e publica o resultado. Podemos atualizar pacotes, instalar ferramentas e deixar a imagem preparada para provisionar novas VMs.
 
-Aqui vou utilizar a **Azure Compute Gallery** para organizar as imagens e suas versões. É a partir delas que vamos provisionar as VMs de validação.
+Vamos utilizar a **Azure Compute Gallery** para armazenar as imagens e suas versões. É dessas versões que criaremos as VMs de teste.
 
 O caminho que seguiremos é simples: **Marketplace → Image Builder → Compute Gallery → VM de teste**.
 
@@ -72,7 +72,7 @@ flowchart TB
 
 ## O que vamos construir neste laboratório?
 
-Neste laboratório vamos criar quatro imagens customizadas:
+Escolhi estas quatro imagens para o laboratório:
 
 | Sistema Operacional | Imagem base                                   | Destino               |
 | ------------------- | --------------------------------------------- | --------------------- |
@@ -89,41 +89,26 @@ Generation 2
 TrustedLaunchSupported
 ```
 
-Uma imagem **Generalized** não mantém informações específicas da máquina utilizada durante a criação, como nome do computador, contas locais exclusivas e determinados identificadores do sistema.
-
-Isso permite que a mesma versão seja utilizada para criar várias VMs independentes.
-
-Uma imagem **Specialized**, por outro lado, preserva o estado e diversas configurações da máquina de origem. Esse modelo pode ser útil em cenários específicos, mas não será utilizado neste laboratório.
+Vamos trabalhar com imagens **Generalized**. Durante a preparação, informações específicas da VM de origem são removidas para que cada VM nova tenha seu próprio provisionamento. O modelo **Specialized** preserva o estado da máquina original e não será utilizado neste laboratório.
 
 
 ## Arquitetura do laboratório
 
-Separei a arquitetura em três partes para mostrar como estão organizadas as permissões, a rede de build e a publicação das imagens.
+Antes de entrar no Portal, veja como organizei as permissões, a rede usada no build e a galeria que receberá as imagens.
 
 **GOVERNANÇA E PERMISSÕES**
+
 ```mermaid
 flowchart TB
-    TENANT["Microsoft Entra Tenant"]
-    ROOT["Tenant Root Group"]
-    MG["Management Group<br/>Plataforma / Landing Zones"]
-
-    POLICY["Azure Policy Assignment<br/>Guardrails corporativos"]
-    ROLEDEF["Custom Role Definition<br/>AIB Permissions<br/>Assignable Scope: Management Group"]
-
-    SUBPRD["Subscription<br/>Produção"]
-    SUBHML["Subscription<br/>Homologação"]
-    SUBIMG["Subscription de Imagens<br/>Image Factory / Shared Services"]
-
-    TENANT --> ROOT
-    ROOT --> MG
-
-    MG --> SUBPRD
-    MG --> SUBHML
-    MG --> SUBIMG
-
-    POLICY -. "Atribuição no Management Group" .-> MG
-    ROLEDEF -. "Disponível para atribuição<br/>nos escopos descendentes" .-> MG
+    MG["Management Group<br/>LABS_PRD"] --> SUB["Subscription do laboratório"]
+    SUB --> RG["Resource Group do AIB"]
+    MG --> ROLE["Custom Role - definição"]
+    ROLE -. "Atribuição no RG" .-> RG
+    RG --> MI["Managed Identity"]
+    RG --> GAL["Azure Compute Gallery"]
+    MI -. "Permissões para publicar" .-> GAL
 ```
+
 ---
 **REDE E PROCESSO DE BUILD**
 ```mermaid
@@ -202,14 +187,14 @@ Para facilitar os testes, vou seguir um padrão de nomes baseado no Cloud Adopti
 > O nome da galeria usa underline (`_`) porque esse recurso tem regras próprias de nomenclatura. 
 {: .prompt-info }
 
-> As subnets estão configuradas como privadas (`defaultOutboundAccess: false`). Vamos usar um NAT Gateway para que a VM temporária consiga acessar os repositórios de atualização. Sem conectividade, o build pode falhar. 
+> As subnets estão privadas (`defaultOutboundAccess: false`) e utilizaremos um NAT Gateway para saída. Também precisamos garantir que o ACI consiga se comunicar com a VM temporária usada no build. 
 {: .prompt-info }
 
 ---
 
 ## Pré-requisitos
 
-Antes de iniciar, vamos considerar alguns pré-requisitos:
+Confira os pré-requisitos antes de começar:
 
 * Permissões para criar os recursos e gerenciar atribuições RBAC. Como a Custom Role será criada no Management Group, é necessário possuir `Microsoft.Authorization/roleDefinitions/write` naquele escopo. Ser Owner apenas da subscription não garante essa permissão;
 * Região com suporte ao Azure VM Image Builder;
@@ -226,14 +211,14 @@ Antes de iniciar, vamos considerar alguns pré-requisitos:
 > Confira as Azure Policies aplicadas à assinatura. O Image Builder cria recursos temporários durante o build, e alguma política pode impedir essa criação. 
 {: .prompt-warning }
 
-> O laboratório gera custo. O NAT Gateway continua cobrando mesmo sem um build em execução, e as versões na Compute Gallery ocupam armazenamento. Ao terminar, revise o que pode ser removido. 
+> **Custo:** o NAT Gateway gera cobrança mesmo sem build, enquanto estiver provisionado. As versões das imagens também consomem armazenamento. Confira os preços da região antes de executar. 
 {: .prompt-info }
 
 ---
 
 ## Imagens base que serão utilizadas
 
-Vamos utilizar imagens oficiais do Marketplace.
+Estes são os identificadores das imagens que iremos consultar no Marketplace da região **West US 2**. A disponibilidade precisa ser confirmada antes de criar cada template.
 
 ### Windows Server 2022
 
@@ -304,7 +289,7 @@ az provider show --namespace Microsoft.ContainerInstance --query registrationSta
 ![azure-image-builder](assets/img/008/003-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
-O retorno esperado é **Registered**
+Os providers utilizados devem retornar **Registered**.
 
 > Caso algum provider esteja como `Registering`, consulte novamente até aparecer `Registered`. 
 {: .prompt-info }
@@ -313,7 +298,7 @@ O retorno esperado é **Registered**
 
 ## Passo 2 - Criar o Resource Group
 
-Vamos criar o Resource Group do laboratório na região West US 2. Ele será utilizado pelos recursos de rede, identidade e galeria.
+Vamos criar o Resource Group para concentrar a rede, a identidade e a galeria. No meu laboratório escolhi **West US 2**.
 
 Pelo portal:
 
@@ -337,7 +322,7 @@ Pelo portal:
 
 ## Passo 3 - Criar a VNet dedicada para o build
 
-O build utilizará uma VNet própria. Vamos separar a subnet da VM temporária, a do ACI e a das VMs de teste.
+Vamos utilizar uma VNet dedicada, com subnets separadas para a VM temporária, o ACI e as VMs de teste.
 
 Neste exemplo iremos utilizar 3 subnets:
 
@@ -347,7 +332,7 @@ Neste exemplo iremos utilizar 3 subnets:
 | `snet-aib-aci-wus2-001`   | Subnet reservada para o Azure Container Instance usado no build isolado |
 | `snet-aib-test-wus2-001`  | Subnet onde as VMs de validação da imagem serão criadas no final do laboratório |
 
-> O ACI participa do build isolado. Ele é temporário e não fará parte da imagem publicada na galeria.
+> O ACI é utilizado durante o build isolado. Ele não será instalado na imagem que publicaremos na galeria.
 {: .prompt-info }
 
 1. Pesquise por **Virtual networks**;
@@ -399,14 +384,14 @@ Neste exemplo iremos utilizar 3 subnets:
 ![azure-image-builder](assets/img/008/005-azure-image-builder-windows-linux.png){: .shadow .rounded-10 }
 <br>
 
-> Confira a opção **Private subnet**. Nosso laboratório usará saída explícita para a internet por meio do NAT Gateway.
+> Confira a opção **Private subnet**. Se não existir saída para a internet, as atualizações do Windows e Linux poderão falhar. O NAT Gateway será configurado no próximo passo.
 {: .prompt-warning }
 
 ---
 
 ## Passo 4 - Criando o NAT Gateway
 
-Como as subnets estão privadas, precisamos de uma saída para as atualizações do Windows e do Linux. Vamos associá-las ao **NAT Gateway**.
+As subnets não terão saída padrão para a internet. Vamos associá-las ao **NAT Gateway** para permitir acesso aos endpoints e repositórios necessários.
 
 1. Pesquise por **NAT Gateways**;
 2. Clique em **Create**;
@@ -487,9 +472,7 @@ echo $ACI_SUBNET_ID
 
 ### Criando a User Assigned Managed Identity
 
-Vamos criar uma **User Assigned Managed Identity**. Ela será utilizada para acessar a rede e publicar as imagens na Compute Gallery. No Passo 8 configuraremos suas permissões.
-
-Criaremos uma **User Assigned Managed Identity**:
+Vamos criar uma **User Assigned Managed Identity**. Ela será utilizada pelo Image Builder para acessar a VNet e publicar as versões na Compute Gallery. As permissões serão configuradas no Passo 8.
 
 1. Pesquise por **Managed Identities** e clique em **Create**:
 
@@ -546,9 +529,9 @@ echo $IDENTITY_PRINCIPAL_ID
 
 ## Passo 6 - Criar a Azure Compute Gallery
 
-Agora vamos criar o repositório que receberá as imagens customizadas.
+Vamos criar a **Azure Compute Gallery**, que receberá as versões geradas pelo Image Builder.
 
-> Pule esta etapa caso você já tenha uma galeria criada. 
+ 
 {: .prompt-info }
 
 Pelo portal:
@@ -579,7 +562,7 @@ Pelo portal:
 
 ## Passo 7 - Criando as Image Definitions
 
-A Azure Compute Gallery trabalha com alguns conceitos importantes:
+Antes dos comandos, precisamos diferenciar três elementos:
 
 | Conceito         | Explicação                                                   |
 | ---------------- | ------------------------------------------------------------ |
@@ -687,7 +670,7 @@ az sig image-definition create \
 
 ## Passo 8 - Criando a Custom Role para o Azure Image Builder
 
-Já temos a VNet, a Managed Identity e a Compute Gallery. Agora precisamos configurar as permissões para que o Image Builder consiga utilizar a rede e publicar as versões das imagens.
+Já temos a rede, a identidade e a galeria. Agora vamos configurar as permissões da Managed Identity.
 
 Vou criar uma **Custom Role** com as ações necessárias. Para esse cenário, não precisamos conceder Contributor à Managed Identity no Resource Group inteiro.
 
@@ -776,7 +759,7 @@ az account management-group list --query "[].{Nome:displayName, Id:name}" -o tab
 
 ### Atribuindo a role à Managed Identity
 
-Criamos a definição da role. Agora precisamos atribuí-la à Managed Identity para que o Image Builder tenha acesso aos recursos do laboratório.
+Criar a role e atribuí-la à identidade são etapas diferentes. Vamos fazer a atribuição no Resource Group do laboratório.
 
 1. Abra o Resource Group `rg-aib-lab-wus2-001` e acesse **Access control (IAM)**.
 2. Clique em **Add > Add role assignment**.
@@ -812,9 +795,9 @@ Precisamos encontrar a role atribuída à identidade no Resource Group (ou em um
 
 ## Passo 9 - Entender o que o Image Builder cria nos bastidores
 
-Antes de criar a primeira imagem, vale entender uma coisa importante.
+Antes do primeiro template, veja onde o Image Builder cria os recursos temporários.
 
-Quando você executa o Azure VM Image Builder, ele cria recursos temporários na assinatura para realizar o build. Esse conjunto é criado e destruído pelo próprio serviço, com a permissão que veio do registro do provider, e não pela Managed Identity que configuramos no passo anterior.
+Durante o build, o serviço cria um Resource Group de staging com os recursos temporários para preparar a imagem. A Managed Identity que configuramos será utilizada para acessar recursos como a galeria e a VNet.
 
 Você provavelmente verá um Resource Group temporário parecido com:
 
@@ -832,9 +815,9 @@ Dentro dele podem aparecer recursos como:
 * NSG;
 * Recursos de rede temporários.
 
-Esses recursos existem durante o processo de build e são removidos ao final.
+O staging Resource Group pode continuar existindo depois do build. A exclusão do staging criado pelo serviço está associada à exclusão do Image Template, por isso não devemos presumir que tudo desaparecerá ao terminar a execução.
 
-> Não saia apagando manualmente o Resource Group temporário no meio do processo. Se for necessário limpar, o ideal é excluir primeiro o Image Template. Apagar recursos temporários na mão pode deixar o template em estado inconsistente. 
+> Não exclua o staging Resource Group manualmente. Primeiro confira o status e salve os logs; a limpeza será feita pela exclusão do Image Template. 
 {: .prompt-danger }
 
 
