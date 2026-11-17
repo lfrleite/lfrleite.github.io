@@ -1643,71 +1643,30 @@ systemctl status walinuxagent --no-pager
 
 ## O que poderíamos adicionar em um cenário corporativo?
 
-Os templates deste artigo utilizam customizações simples para começarmos os testes.
+Até aqui os templates têm poucas customizações. Isso foi proposital: fica mais fácil verificar o resultado e entender por que um build falhou.
 
-Depois podemos acrescentar outros componentes conforme a necessidade de cada imagem.
+No Windows, estamos instalando o IIS, ajustando o fuso horário e gravando um arquivo em `C:\BuildInfo`. No Linux, os testes envolvem atualização de pacotes, ferramentas básicas e `/opt/buildinfo/image-info.txt`.
 
-Alguns exemplos:
+Em um ambiente corporativo, poderíamos acrescentar scripts de configuração, agentes de monitoramento e segurança ou ajustes específicos da aplicação. Eu prefiro começar com uma imagem base que funcione e acrescentar esses componentes depois, testando uma alteração por vez.
 
-### Windows
-
-* Instalação do Azure Monitor Agent;
-* Instalação de agente de segurança;
-* Configuração de baseline;
-* Instalação de ferramentas internas;
-* Configuração de proxy;
-* Configuração de timezone;
-* Instalação de roles específicas;
-* Aplicação de scripts PowerShell;
-* Cópia de arquivos base;
-* Preparação para workloads específicos.
-
-### Linux
-
-* Instalação de pacotes padrão;
-* Hardening básico;
-* Configuração de NTP/timezone;
-* Configuração de repositórios internos;
-* Instalação de agentes;
-* Ajuste de logs;
-* Configuração de proxy;
-* Instalação de ferramentas de troubleshooting;
-* Preparação para NGINX, Apache, Docker ou aplicações internas.
-
-> Comece com poucas alterações. Depois que o build funcionar, acrescente as demais customizações. Isso facilita a identificação de problemas. 
+> Não coloque instaladores, segredos ou agentes de produção no template só para demonstrar um recurso. Primeiro valide a imagem com os componentes básicos.
 {: .prompt-warning }
 
 ---
 
 ## Boas práticas para usar Azure Image Builder
 
-Alguns cuidados que fazem bastante diferença:
+Separei os cuidados que quero conferir antes de utilizar uma imagem em outras VMs:
 
 ### 1. Não misture tudo em uma única imagem
 
-Evite criar uma imagem cheia de componentes que nem todas as VMs precisarão utilizar.
-
-O ideal é separar por finalidade:
-
-* Base Windows Server;
-* Base Linux;
-* Base Web Server;
-* Base Aplicação;
-* Base Banco de Dados, se fizer sentido;
-* Base AVD, se o cenário for esse.
+Uma VM de aplicação não precisa receber todos os componentes de uma VM de banco de dados. Mantenha imagens base separadas por sistema operacional e crie variações somente quando existir uma necessidade real. Isso reduz o tempo do build e facilita a manutenção.
 
 ### 2. Versione as imagens
 
-Use versões como:
+Uma convenção simples é utilizar versões como `1.0.0`, `1.0.1` ou `1.1.0`. Os números abaixo são **exemplos de versionamento**, não versões que já foram publicadas neste laboratório.
 
-```text
-1.0.0
-1.0.1
-1.1.0
-2.0.0
-```
-
-Exemplo prático:
+Como podemos organizar:
 
 | Versão  | Significado              |
 | ------- | ------------------------ |
@@ -1718,58 +1677,39 @@ Exemplo prático:
 
 ### 3. Teste antes de liberar
 
-Nunca publique uma imagem como padrão sem criar uma VM de teste antes.
+O status `Succeeded` do build não garante que a VM vai funcionar como esperamos. Depois de publicar a versão, crie uma VM de teste e confira o boot, o agente do Azure, a rede e as alterações feitas pelo template. No Windows, validaremos o IIS e o fuso horário. No Linux, o arquivo em `/opt/buildinfo` e os pacotes instalados.
 
-Valide:
-
-* Boot;
-* Login;
-* Rede;
-* Agentes;
-* Atualizações;
-* Logs;
-* Aplicações;
-* Políticas;
-* Monitoramento.
+Se um desses testes falhar, registre o erro antes de tentar outro build.
 
 ### 4. Cuidado com secrets
 
 Não grave senhas, tokens ou chaves de API nos templates nem na imagem. Lembre-se de que os comandos inline ficam visíveis na definição do Image Builder.
 
-Se precisar acessar secrets durante o build, prefira Key Vault e Managed Identity.
+Se precisar utilizar um segredo durante o build, avalie Azure Key Vault e autenticação com Managed Identity. Não coloque credenciais nos scripts inline.
 
 ### 5. Documente cada imagem
 
-Mantenha um histórico simples:
+Registre os dados reais de cada build, por exemplo:
 
 ```text
 Imagem: imgdef-ubuntu2404
-Versão: 1.0.0
-Data: 07/06/2026
-Base: Canonical:ubuntu-24_04-lts:server:latest
-Customizações:
-- apt update/upgrade
-- pacotes básicos
-- timezone America/Sao_Paulo
-- limpeza de cache
-Responsável: Cloud Team
+Versão publicada: <VERSAO_GERADA>
+Data de execução: <DATA_DO_BUILD>
+Origem: Canonical:ubuntu-24_04-lts:server:<VERSAO_UTILIZADA>
+Customizações verificadas: <RESULTADOS_DOS_TESTES>
 ```
+
+O importante é conseguir relacionar a versão publicada ao template e aos testes que foram feitos.
 
 ### 6. Cuidado com Azure Policy
 
-Se houver políticas bloqueando recursos, valide antes:
+Antes do primeiro build, confira se as Azure Policies permitem os recursos temporários que o serviço precisa criar. No nosso cenário isso inclui VM, discos, interfaces de rede, Storage Account e ACI. Verifique também se a região e o tamanho da VM de build estão liberados.
 
-* ACI permitido;
-* Storage Account permitido;
-* VM temporária permitida;
-* NSG permitido;
-* Private Endpoint permitido, dependendo da topologia;
-* Região permitida;
-* SKU de VM permitida.
+Se houver uma falha, use o **Activity Log** e a mensagem do serviço para identificar qual recurso foi bloqueado.
 
 ### 7. Não apague o Resource Group temporário manualmente
 
-Se precisar limpar, remova o Image Template corretamente.
+O Resource Group de staging pode guardar logs importantes. Antes de apagar qualquer coisa, confira o status do template e salve os arquivos de diagnóstico. Depois remova o Image Template; não exclua o staging manualmente.
 
 ---
 
@@ -1779,22 +1719,21 @@ Se precisar limpar, remova o Image Template corretamente.
 
 Se a publicação na galeria falhar, confira primeiro a role atribuída à Managed Identity e o escopo dessa atribuição.
 
-Valide:
+Confirme o principal da Managed Identity e consulte suas atribuições:
 
 ```bash
-az role assignment list \
-  --assignee $IDENTITY_CLIENT_ID \
-  --all \
-  --output table
+RG="rg-aib-lab-wus2-001"
+PID=$(az identity show -g "$RG" -n id-aib-lab-wus2-001 --query principalId -o tsv)
+az role assignment list --assignee-object-id "$PID" --all --include-inherited --fill-principal-name false --query "[].{Role:roleDefinitionName,Scope:scope}" -o table
 ```
+
+Se a lista estiver vazia, ainda precisamos atribuir a role à identidade. A existência da Custom Role no Management Group não é suficiente.
 
 ---
 
 ### Erro de subnet
 
-Pode ocorrer quando a identidade não tem permissão de join na subnet.
-
-A ação necessária é:
+Nesse caso, confira se a identidade tem permissão para ingressar na subnet. A ação necessária é:
 
 ```text
 Microsoft.Network/virtualNetworks/subnets/join/action
@@ -1804,32 +1743,19 @@ Microsoft.Network/virtualNetworks/subnets/join/action
 
 ### Erro de imagem não encontrada
 
-Pode acontecer se a SKU não existir na região.
-
-Valide:
+A primeira verificação é confirmar se o publisher, a oferta e a SKU realmente existem na região. Para Debian 13, consulte:
 
 ```bash
-az vm image list \
-  --all \
-  --location westus2 \
-  --publisher Debian \
-  --offer debian-13 \
-  --output table
+az vm image list-skus --location westus2 --publisher Debian --offer debian-13 -o table
 ```
+
+Não presuma que a imagem está disponível só porque a Image Definition foi criada. São recursos diferentes.
 
 ---
 
 ### Erro por Azure Policy
 
-Se a organização bloqueia determinados recursos, o Image Builder pode falhar ao criar recursos temporários.
-
-Nesses casos, valide:
-
-* Activity Log;
-* Policy compliance;
-* Resource Group temporário;
-* Mensagem do último run;
-* Logs do build.
+Se existir uma política bloqueando recursos na assinatura, o Image Builder pode falhar antes mesmo de executar as customizações. Consulte o **Activity Log** e o resultado da implantação para identificar a política e o recurso afetado. Não altere uma política sem entender o impacto.
 
 ---
 
@@ -1837,7 +1763,7 @@ Nesses casos, valide:
 
 Se o build ficar parado na atualização de pacotes, confira a saída da subnet. A VM precisa alcançar os repositórios e os endpoints utilizados durante o processo.
 
-Confirme se a subnet de build está associada ao NAT Gateway:
+Comece conferindo a associação da subnet de build ao NAT Gateway:
 
 ```bash
 az network vnet subnet show \
@@ -1851,7 +1777,7 @@ az network vnet subnet show \
 
 ### Erro de delegation na subnet do ACI
 
-Se o build isolado não sobe o container, geralmente a subnet do ACI está sem a delegation correta ou já tem outro recurso ocupando ela.
+Se o ACI não for provisionado, confira a delegação da subnet e as regras de conectividade. Para o modelo com duas subnets próprias, a Microsoft documenta saída do ACI para a internet nas portas **443 e 445** e comunicação do ACI com a VM de build nas portas **22 (Linux)** ou **5986 (Windows)**. As regras de rede não podem bloquear esses fluxos.
 
 ```bash
 az network vnet subnet show \
@@ -1861,13 +1787,13 @@ az network vnet subnet show \
   --query delegations
 ```
 
-O retorno precisa apontar para `Microsoft.ContainerInstance/containerGroups`.
+A delegação deve apontar para `Microsoft.ContainerInstance/containerGroups`. Se ela estiver correta, investigue o NSG, as rotas e os logs do staging Resource Group antes de alterar a infraestrutura.
 
 ---
 
 ## Checklist final
 
-Antes de considerar o laboratório finalizado, valide:
+Este checklist é para a execução completa. As etapas que ainda não foram testadas continuarão desmarcadas até termos os respectivos resultados e prints:
 
 * [ ] Resource Group criado;
 * [ ] Providers registrados;
@@ -1898,7 +1824,7 @@ Antes de considerar o laboratório finalizado, valide:
 
 ## Limpeza do ambiente
 
-Se quiser remover o laboratório depois, comece pelos Image Templates:
+**Esta etapa é opcional e destrutiva.** Antes de limpar, salve os logs e confira se você realmente não precisa mais das versões publicadas na galeria. Comece removendo os Image Templates:
 
 ```bash
 az resource delete \
@@ -1928,7 +1854,13 @@ az resource delete \
   --name aib-debian13
 ```
 
-Depois, remova o Resource Group, se for realmente um laboratório:
+Antes de remover o Resource Group inteiro, consulte os recursos que ainda estão nele:
+
+```bash
+az resource list -g rg-aib-lab-wus2-001 --query "[].{Name:name,Type:type}" -o table
+```
+
+Só execute o comando abaixo se tiver certeza de que todos os recursos desse Resource Group podem ser excluídos. Isso inclui a Compute Gallery, as versões de imagem, a rede e a Managed Identity.
 
 ```bash
 az group delete \
@@ -1937,7 +1869,7 @@ az group delete \
   --no-wait
 ```
 
-> Em ambiente real, muito cuidado com esse comando. Ele remove tudo dentro do Resource Group. 
+> **Atenção:** `az group delete` remove todos os recursos do Resource Group indicado e não é uma limpeza seletiva. Não execute esse comando durante a coleta dos prints ou enquanto precisar das imagens. 
 {: .prompt-danger }
 
 ---
@@ -1964,14 +1896,12 @@ az group delete \
 
 ## The End!
 
-É isso aí, pessoALL! Chegamos ao final desta primeira parte do laboratório.
+Fala pessoALL! Chegamos à parte final do que já conseguimos configurar no laboratório.
 
-Até aqui preparamos a VNet, o NAT Gateway, a Managed Identity e as definições das quatro imagens na Azure Compute Gallery.
+A VNet, o NAT Gateway, a Managed Identity e as quatro Image Definitions estão criados. Ainda faltam os Image Templates, os builds, as versões publicadas e os testes nas VMs.
 
-Ainda precisamos executar os Image Templates, acompanhar os builds e testar as VMs criadas a partir das versões publicadas. Vou incluir esses resultados e os prints conforme concluir cada teste.
+Vou acrescentar essas etapas com os comandos que funcionaram e os prints das execuções. Também disponibilizarei os arquivos JSON validados no repositório para facilitar a reprodução.
 
-Quando terminarmos essa validação, também vou disponibilizar no repositório os arquivos JSON usados em cada build.
+Se você estiver acompanhando o laboratório, confira principalmente o RBAC da Managed Identity antes de iniciar o primeiro build. É justamente a etapa que estamos revisando agora.
 
-Espero que esse conteúdo ajude quem está começando a trabalhar com Golden Images. Se encontrarem alguma diferença na configuração do Portal ou algum erro durante a execução, deixem nos comentários para compararmos os cenários.
-
-Obrigado mais uma vez por acompanharem o blog! Nos vemos na próxima!
+Obrigado por acompanhar mais um artigo. Nos vemos na próxima!
